@@ -15,6 +15,7 @@ var rootCmd = &cobra.Command{
 	Use:   "opslevel-mcp",
 	Short: "Opslevel MCP Server",
 	Long:  `Opslevel MCP Server`,
+	RunE:  mcpCmd.RunE,
 }
 
 func Execute(v string, currentCommit string) {
