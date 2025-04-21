@@ -189,7 +189,12 @@ var rootCmd = &cobra.Command{
 
 		log.Info().Msg("Starting MCP server...")
 		if err := server.ServeStdio(s); err != nil {
-			panic(err)
+			if err == context.Canceled {
+				log.Info().Msg("MCP server stdio connection closed.")
+				close(done)
+			} else {
+				panic(err)
+			}
 		}
 		<-done
 
