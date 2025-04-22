@@ -6,6 +6,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/opslevel/opslevel-go/v2025"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +18,15 @@ type LightweightComponent struct {
 	Name  string `json:"name"`
 	Owner string `json:"owner"`
 	URL   string `json:"url"`
+}
+
+type LightweightInfrastructureResource struct {
+	Id           string   `json:"id"`
+	Name         string   `json:"name"`
+	Owner        string   `json:"owner"`
+	Aliases      []string `json:"aliases"`
+	Schema       string   `json:"schema"`
+	ProviderType string   `json:"providerType"`
 }
 
 var mcpCmd = &cobra.Command{
@@ -127,7 +137,18 @@ var mcpCmd = &cobra.Command{
 				if err != nil {
 					return nil, err
 				}
-				data, err := json.Marshal(resp.Nodes)
+				var infrastructureResources []LightweightInfrastructureResource
+				for _, node := range resp.Nodes {
+					infrastructureResources = append(infrastructureResources, LightweightInfrastructureResource{
+						Id:           string(node.Id),
+						Name:         node.Name,
+						Owner:        node.Owner.Alias(),
+						Aliases:      node.Aliases,
+						Schema:       node.Schema,
+						ProviderType: node.ProviderType,
+					})
+				}
+				data, err := json.Marshal(infrastructureResources)
 				if err != nil {
 					return nil, err
 				}
@@ -158,6 +179,29 @@ var mcpCmd = &cobra.Command{
 					return nil, err
 				}
 				data, err := json.Marshal(resp.Nodes)
+				if err != nil {
+					return nil, err
+				}
+				return mcp.NewToolResultText(string(data)), nil
+			})
+
+		// Register ability to fetch a single resource by ID or alias
+		s.AddTool(
+			mcp.NewTool(
+				"resourceDetails",
+				mcp.WithDescription("Get details for a single resource in an OpsLevel account using its ID or alias."),
+				mcp.WithString("resourceType", mcp.Required(), mcp.Description("The type of the resource."), mcp.Enum("service", "infrastructure_resource", "team", "system", "domain")),
+				mcp.WithString("identifier", mcp.Required(), mcp.Description("The ID or alias of the resource.")),
+			),
+			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				resourceTypeString := req.Params.Arguments["resourceType"].(string)
+				identifier := req.Params.Arguments["identifier"].(string)
+				resourceType := opslevel.AliasOwnerTypeEnum(resourceTypeString)
+				resp, err := client.GetAliasableResource(resourceType, identifier)
+				if err != nil {
+					return nil, err
+				}
+				data, err := json.Marshal(resp)
 				if err != nil {
 					return nil, err
 				}
