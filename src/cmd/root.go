@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -17,6 +18,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
+
+//go:embed default_prompt.md
+var defaultSystemPrompt string
 
 type serializedComponent struct {
 	id    string
@@ -55,6 +59,7 @@ var rootCmd = &cobra.Command{
 		s := server.NewMCPServer(
 			"OpsLevel",
 			version,
+			server.WithInstructions(defaultSystemPrompt),
 		)
 
 		client := NewGraphClient(version)
