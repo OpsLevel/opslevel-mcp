@@ -136,7 +136,11 @@ var rootCmd = &cobra.Command{
 
 		// Register Domains
 		s.AddTool(
-			mcp.NewTool("domains", mcp.WithDescription("Get all the domains in the opslevel account.  Domains are objects in opslevel that represent a top-level abstraction used to organize and categorize software systems.")),
+			mcp.NewTool("domains", mcp.WithDescription(
+				`Get all the domains in the opslevel account.
+			Domains are comprised of child Systems which contain Components.
+			Used to represent large business units or verticals within OpsLevel.
+			`)),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListDomains(nil)
 				return newToolResult(resp.Nodes, err)
@@ -144,7 +148,11 @@ var rootCmd = &cobra.Command{
 
 		// Register Systems
 		s.AddTool(
-			mcp.NewTool("systems", mcp.WithDescription("Get all the systems in the opslevel account.  Systems are objects in opslevel that represent a grouping of services or components that act together to serve a business function or process.")),
+			mcp.NewTool("systems", mcp.WithDescription(
+				`Get all the systems in the opslevel account. 
+			Systems are made up of Components that combine to form a unified whole or function.
+			eg a “Checkout” System that combines a cart and payment component.
+			`)),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListSystems(nil)
 				return newToolResult(resp.Nodes, err)
