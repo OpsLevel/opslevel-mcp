@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -263,8 +264,11 @@ var rootCmd = &cobra.Command{
 				resp, err := client.GetAliasableResource(resourceType, identifier)
 				switch v := resp.(type) {
 				case *opslevel.Service:
-					v.Properties, err = v.GetProperties(client, nil)
-					return newToolResult(v, err)
+					lastDeploy, err1 := v.GetLastDeploy(client, nil)
+					properties, err2 := v.GetProperties(client, nil)
+					v.LastDeploy = lastDeploy
+					v.Properties = properties
+					return newToolResult(v, errors.Join(err1, err2))
 				default:
 					return newToolResult(resp, err)
 				}
