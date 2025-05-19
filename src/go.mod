@@ -5,7 +5,7 @@ go 1.24
 toolchain go1.24.2
 
 require (
-	github.com/mark3labs/mcp-go v0.23.1
+	github.com/mark3labs/mcp-go v0.28.0
 	github.com/opslevel/opslevel-go/v2025 v2025.2.10
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
