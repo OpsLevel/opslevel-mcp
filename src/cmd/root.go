@@ -39,6 +39,18 @@ type serializedInfrastructureResource struct {
 	ProviderType string
 }
 
+type serializedCheck struct {
+	Id          string
+	Name        string
+	Owner       string
+	Description string
+	Notes       string
+	Enabled     bool
+	Type        string
+	Level       string
+	Category    string
+}
+
 // newToolResult creates a CallToolResult for the passed object handling any json marshaling errors
 func newToolResult(obj any, err error) (*mcp.CallToolResult, error) {
 	if err != nil {
@@ -343,6 +355,41 @@ var rootCmd = &cobra.Command{
 				variables := getListDocumentPayloadVariables(searchTerm)
 				resp, err := service.GetDocuments(client, &variables)
 				return newToolResult(resp, err)
+			})
+
+		// Register checks
+		s.AddTool(
+			mcp.NewTool(
+				"checks",
+				mcp.WithDescription("Get all the checks in the OpsLevel account. Checks provide a foundation for evaluating the maturity of software components, allowing for the definition and enforcement of criteria that ensure components are built and maintained according to best practices. Checks in lower levels are higher priority to address."),
+				mcp.WithToolAnnotation(mcp.ToolAnnotation{
+					Title:           "Checks in OpsLevel",
+					ReadOnlyHint:    true,
+					DestructiveHint: false,
+					IdempotentHint:  true,
+					OpenWorldHint:   true,
+				}),
+			),
+			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				resp, err := client.ListChecks(nil)
+				if err != nil {
+					return nil, err
+				}
+				var checks []serializedCheck
+				for _, node := range resp.Nodes {
+					checks = append(checks, serializedCheck{
+						Id:          string(node.Id),
+						Name:        node.Name,
+						Owner:       node.Owner.Team.Alias,
+						Description: node.Description,
+						Notes:       node.Notes,
+						Type:        string(node.Type),
+						Level:       node.Level.Alias,
+						Category:    node.Category.Name,
+						Enabled:     node.Enabled,
+					})
+				}
+				return newToolResult(checks, nil)
 			})
 
 		log.Info().Msg("Starting MCP server...")
