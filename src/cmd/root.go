@@ -39,6 +39,11 @@ type serializedInfrastructureResource struct {
 	ProviderType string
 }
 
+type serializedLevel struct {
+	Alias string
+	Index int
+}
+
 type serializedCheck struct {
 	Id          string
 	Name        string
@@ -47,7 +52,7 @@ type serializedCheck struct {
 	Notes       string
 	Enabled     bool
 	Type        string
-	Level       string
+	Level       serializedLevel
 	Category    string
 }
 
@@ -361,7 +366,7 @@ var rootCmd = &cobra.Command{
 		s.AddTool(
 			mcp.NewTool(
 				"checks",
-				mcp.WithDescription("Get all the checks in the OpsLevel account. Checks provide a foundation for evaluating the maturity of software components, allowing for the definition and enforcement of criteria that ensure components are built and maintained according to best practices. Checks in lower levels are higher priority to address."),
+				mcp.WithDescription("Get all the checks in the OpsLevel account. Checks provide a foundation for evaluating the maturity of software components, allowing for the definition and enforcement of criteria that ensure components are built and maintained according to best practices. Check priority is determined by level index, not level name—lower index means higher priority."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Checks in OpsLevel",
 					ReadOnlyHint:    true,
@@ -384,7 +389,7 @@ var rootCmd = &cobra.Command{
 						Description: node.Description,
 						Notes:       node.Notes,
 						Type:        string(node.Type),
-						Level:       node.Level.Alias,
+						Level:       serializedLevel{Alias: node.Level.Alias, Index: node.Level.Index},
 						Category:    node.Category.Name,
 						Enabled:     node.Enabled,
 					})
