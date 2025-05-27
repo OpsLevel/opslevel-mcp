@@ -24,12 +24,12 @@ import (
 var defaultSystemPrompt string
 
 type serializedComponent struct {
-	Id    string
-	Name  string
-	Owner string
-	Language string
+	Id        string
 	Framework string
-	Url   string
+	Language  string
+	Name      string
+	Owner     string
+	Url       string
 }
 
 type serializedInfrastructureResource struct {
@@ -167,7 +167,7 @@ var rootCmd = &cobra.Command{
 		s.AddTool(
 			mcp.NewTool(
 				"components",
-				mcp.WithDescription("Get all the components in the OpsLevel account.  Components are objects in OpsLevel that represent things like apis, libraries, services, frontends, backends, etc."),
+				mcp.WithDescription("Get all the components in the OpsLevel account.  Components are objects in OpsLevel that represent things like apis, libraries, services, frontends, backends, etc. Use this tool to list what components are in the catalog, what team is the owner, what primary coding language is used, and what primary framework is used."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Components in OpsLevel",
 					ReadOnlyHint:    true,
@@ -184,12 +184,12 @@ var rootCmd = &cobra.Command{
 				var components []serializedComponent
 				for _, node := range resp.Nodes {
 					components = append(components, serializedComponent{
-						Id:    string(node.Id),
-						Name:  node.Name,
-						Owner: node.Owner.Alias,
-						Language: node.Language,
+						Id:        string(node.Id),
+						Name:      node.Name,
+						Owner:     node.Owner.Alias,
+						Language:  node.Language,
 						Framework: node.Framework,
-						Url:   node.HtmlURL,
+						Url:       node.HtmlURL,
 					})
 				}
 				return newToolResult(components, nil)
