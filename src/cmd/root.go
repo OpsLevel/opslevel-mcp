@@ -27,6 +27,8 @@ type serializedComponent struct {
 	Id    string
 	Name  string
 	Owner string
+	Language string
+	Framework string
 	Url   string
 }
 
@@ -185,6 +187,8 @@ var rootCmd = &cobra.Command{
 						Id:    string(node.Id),
 						Name:  node.Name,
 						Owner: node.Owner.Alias,
+						Language: node.Language,
+						Framework: node.Framework,
 						Url:   node.HtmlURL,
 					})
 				}
