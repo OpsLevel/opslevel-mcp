@@ -30,6 +30,7 @@ type serializedComponent struct {
 	Name      string
 	Owner     string
 	Url       string
+	Level     serializedLevel
 }
 
 type serializedInfrastructureResource struct {
@@ -167,7 +168,7 @@ var rootCmd = &cobra.Command{
 		s.AddTool(
 			mcp.NewTool(
 				"components",
-				mcp.WithDescription("Get all the components in the OpsLevel account.  Components are objects in OpsLevel that represent things like apis, libraries, services, frontends, backends, etc. Use this tool to list what components are in the catalog, what team is the owner, what primary coding language is used, and what primary framework is used."),
+				mcp.WithDescription("Get all the components in the OpsLevel account.  Components are objects in OpsLevel that represent things like apis, libraries, services, frontends, backends, etc. Use this tool to list what components are in the catalog, what team is the owner, what primary coding language is used, and what primary framework is used. It also includes its rubric level, corresponding to the maturity of the component; a higher index is better. A level is achieved by passing all checks tied to that same level."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Components in OpsLevel",
 					ReadOnlyHint:    true,
@@ -190,6 +191,7 @@ var rootCmd = &cobra.Command{
 						Language:  node.Language,
 						Framework: node.Framework,
 						Url:       node.HtmlURL,
+						Level:     serializedLevel{Alias: node.MaturityReport.OverallLevel.Alias, Index: node.MaturityReport.OverallLevel.Index},
 					})
 				}
 				return newToolResult(components, nil)
