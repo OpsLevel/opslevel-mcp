@@ -1,4 +1,0 @@
-kind: Added
-body: Add Language & Framework to the components tool directly, so it is listed without
-  additional calls to `resourceDetails`
-time: 2025-05-27T07:41:11.365169-07:00
