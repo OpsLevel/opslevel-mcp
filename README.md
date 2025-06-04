@@ -113,7 +113,9 @@ Currently, the MCP server only uses read-only access to your OpsLevel account an
 
 ## Cursor
 
-[Cursor](https://docs.cursor.com/context/model-context-protocol)
+[Cursor Docs](https://docs.cursor.com/context/model-context-protocol)
+
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.png)](cursor://anysphere.cursor-deeplink/mcp/install?name=opslevel&config=eyJjb21tYW5kIjoib3BzbGV2ZWwtbWNwIiwiZW52Ijp7Ik9QU0xFVkVMX0FQSV9UT0tFTiI6IlhYWFhYWCJ9fQ==)
 
 1. Open the Cursor menu and select Settings → Cursor Settings → MCP
 2. Click "Add new global MCP server"
