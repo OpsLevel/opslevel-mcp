@@ -134,6 +134,27 @@ Currently, the MCP server only uses read-only access to your OpsLevel account an
 }
 ```
 
+## Warp
+
+[Warp](https://www.warp.dev/)
+
+1. Access your MCP settings under Settings > AI > Manage MCP Servers. Warp provides [instructions for other ways to access this list.](https://docs.warp.dev/knowledge-and-collaboration/mcp#how-to-access-mcp-server-settings)
+2. Press the add button
+3. Add the config below
+
+```json
+{
+  "opslevel": {
+    "command": "opslevel-mcp",
+    "args": [],
+    "env": {
+      "OPSLEVEL_API_TOKEN": "XXXXXX"
+    },
+    "start_on_launch": true
+  }
+}
+```
+
 ## Windsurf
 
 [Windsurf](https://windsurf.com/editor)
