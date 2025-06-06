@@ -31,6 +31,8 @@ type serializedComponent struct {
 	Owner     string
 	Url       string
 	Level     serializedLevel
+	Lifecycle serializedLifecycle
+	Tier      serializedTier
 }
 
 type serializedInfrastructureResource struct {
@@ -43,6 +45,16 @@ type serializedInfrastructureResource struct {
 }
 
 type serializedLevel struct {
+	Alias string
+	Index int
+}
+
+type serializedLifecycle struct {
+	Alias string
+	Index int
+}
+
+type serializedTier struct {
 	Alias string
 	Index int
 }
@@ -168,7 +180,7 @@ var rootCmd = &cobra.Command{
 		s.AddTool(
 			mcp.NewTool(
 				"components",
-				mcp.WithDescription("Get all the components in the OpsLevel account.  Components are objects in OpsLevel that represent things like apis, libraries, services, frontends, backends, etc. Use this tool to list what components are in the catalog, what team is the owner, what primary coding language is used, and what primary framework is used. It also includes its rubric level, corresponding to the maturity of the component; a higher index is better. A level is achieved by passing all checks tied to that same level."),
+				mcp.WithDescription("Get all the components in the OpsLevel account.  Components are objects in OpsLevel that represent things like apis, libraries, services, frontends, backends, etc. Use this tool to list what components are in the catalog, what team is the owner, what primary coding language is used, and what primary framework is used. It also includes its rubric level, corresponding to the maturity of the component; a higher index is better. A level is achieved by passing all checks tied to that same level. The Lifecycle field indicates the stage of the component (e.g., Alpha, Beta, GA, Decommissioned). The Tier field represents the importance and criticality of the component, with Tier 1 being the most critical (customer-facing with high impact) and Tier 4 being of least importance."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Components in OpsLevel",
 					ReadOnlyHint:    true,
@@ -192,6 +204,8 @@ var rootCmd = &cobra.Command{
 						Framework: node.Framework,
 						Url:       node.HtmlURL,
 						Level:     serializedLevel{Alias: node.MaturityReport.OverallLevel.Alias, Index: node.MaturityReport.OverallLevel.Index},
+						Lifecycle: serializedLifecycle{Alias: node.Lifecycle.Alias, Index: node.Lifecycle.Index},
+						Tier:      serializedTier{Alias: node.Tier.Alias, Index: node.Tier.Index},
 					})
 				}
 				return newToolResult(components, nil)
