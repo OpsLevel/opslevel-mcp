@@ -55,4 +55,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/opslevel/opslevel-go/v2025 => ./submodules/opslevel-go
+replace github.com/opslevel/opslevel-go/v2025 => ./submodules/opslevel-go
