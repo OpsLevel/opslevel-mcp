@@ -88,7 +88,7 @@ type serializedCheckResultsByLevel struct {
 type serializedCheckResults struct {
 	ByLevel      []serializedCheckResultsByLevel
 	CurrentLevel serializedLevel
-	NextLevel    serializedLevel
+	NextLevel    *serializedLevel
 }
 
 // newToolResult creates a CallToolResult for the passed object handling any json marshaling errors
@@ -455,6 +455,9 @@ var rootCmd = &cobra.Command{
 				if err != nil {
 					return nil, err
 				}
+				if service.Id == "" {
+					return nil, fmt.Errorf("service with id %s not found", req.Params.Arguments["serviceId"].(string))
+				}
 
 				stats, err := service.GetServiceStats(client)
 				if err != nil {
@@ -466,10 +469,12 @@ var rootCmd = &cobra.Command{
 						Alias: stats.Rubric.Level.Alias,
 						Index: stats.Rubric.Level.Index,
 					},
-					NextLevel: serializedLevel{
+				}
+				if stats.Rubric.CheckResults.NextLevel.Level.Alias != "" {
+					result.NextLevel = &serializedLevel{
 						Alias: stats.Rubric.CheckResults.NextLevel.Level.Alias,
 						Index: stats.Rubric.CheckResults.NextLevel.Level.Index,
-					},
+					}
 				}
 
 				for _, checkResultsByLevel := range stats.Rubric.CheckResults.ByLevel.Nodes {
