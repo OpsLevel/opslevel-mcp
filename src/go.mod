@@ -7,6 +7,7 @@ toolchain go1.24.2
 require (
 	github.com/mark3labs/mcp-go v0.23.1
 	github.com/opslevel/opslevel-go/v2025 v2025.5.28
+	github.com/relvacode/iso8601 v1.6.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
@@ -37,7 +38,6 @@ require (
 	github.com/opslevel/moredefaults v0.0.0-20240529152742-17d1318a3c12 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/relvacode/iso8601 v1.6.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
