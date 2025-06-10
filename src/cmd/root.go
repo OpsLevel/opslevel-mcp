@@ -122,6 +122,9 @@ var rootCmd = &cobra.Command{
 
 		client := NewGraphClient(version)
 
+		trueValue := true
+		falseValue := false
+
 		// Register Teams
 		s.AddTool(
 			mcp.NewTool(
@@ -129,10 +132,10 @@ var rootCmd = &cobra.Command{
 				mcp.WithDescription("Get all the team names, identifiers and metadata for the OpsLevel account.  Teams are owners of other objects in OpsLevel. Only use this if you need to search all teams."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Teams in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -147,10 +150,10 @@ var rootCmd = &cobra.Command{
 				mcp.WithDescription("Get all the user names, e-mail addresses and metadata for the OpsLevel account.  Users are the people in OpsLevel. Only use this if you need to search all users."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Users in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -166,10 +169,10 @@ var rootCmd = &cobra.Command{
 
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Actions in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -185,10 +188,10 @@ var rootCmd = &cobra.Command{
 
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Filters in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -203,10 +206,10 @@ var rootCmd = &cobra.Command{
 				mcp.WithDescription("Get all the components in the OpsLevel account.  Components are objects in OpsLevel that represent things like apis, libraries, services, frontends, backends, etc. Use this tool to list what components are in the catalog, what team is the owner, what primary coding language is used, and what primary framework is used. It also includes its rubric level, corresponding to the maturity of the component; a higher index is better. A level is achieved by passing all checks tied to that same level. The Lifecycle field indicates the stage of the component (e.g., Alpha, Beta, GA, Decommissioned). The Tier field represents the importance and criticality of the component, with Tier 1 being the most critical (customer-facing with high impact) and Tier 4 being of least importance."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Components in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -238,10 +241,10 @@ var rootCmd = &cobra.Command{
 				mcp.WithDescription("Get all the infrastructure in the OpsLevel account.  Infrastructure are objects in OpsLevel that represent cloud provider resources like vpc, databases, caches, networks, vms, etc."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Infrastructure in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -270,10 +273,10 @@ var rootCmd = &cobra.Command{
 				mcp.WithDescription("Get all the domains in the OpsLevel account. Domains are comprised of child Systems which contain Components. Used to represent large business units or verticals within OpsLevel."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Domains in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -288,10 +291,10 @@ var rootCmd = &cobra.Command{
 				mcp.WithDescription("Get all the systems in the OpsLevel account. Systems are made up of Components that combine to form a unified whole or function. eg a 'Checkout' System that combines a cart and payment component."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Systems in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -308,15 +311,21 @@ var rootCmd = &cobra.Command{
 				mcp.WithString("identifier", mcp.Required(), mcp.Description("The ID or alias of the resource.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Resource Details in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				resourceTypeString := req.Params.Arguments["resourceType"].(string)
-				identifier := req.Params.Arguments["identifier"].(string)
+				resourceTypeString, err := req.RequireString("resourceType")
+				if err != nil {
+					return nil, err
+				}
+				identifier, err := req.RequireString("identifier")
+				if err != nil {
+					return nil, err
+				}
 				resourceType := opslevel.AliasOwnerTypeEnum(resourceTypeString)
 				resp, err := client.GetAliasableResource(resourceType, identifier)
 				switch v := resp.(type) {
@@ -338,17 +347,14 @@ var rootCmd = &cobra.Command{
 				mcp.WithString("searchTerm", mcp.Description("To filter documents with.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Documents in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				searchTerm := ""
-				if req.Params.Arguments["searchTerm"] != nil {
-					searchTerm = req.Params.Arguments["searchTerm"].(string)
-				}
+				searchTerm := req.GetString("searchTerm", "")
 				variables := getListDocumentPayloadVariables(searchTerm)
 				resp, err := client.ListDocuments(&variables)
 				return newToolResult(resp.Nodes, err)
@@ -361,14 +367,17 @@ var rootCmd = &cobra.Command{
 				mcp.WithString("id", mcp.Required(), mcp.Description("The id of the document to fetch.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Document in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				id := req.Params.Arguments["id"].(string)
+				id, err := req.RequireString("id")
+				if err != nil {
+					return nil, err
+				}
 				resp, err := client.GetDocument(opslevel.ID(id))
 				return newToolResult(resp, err)
 			})
@@ -381,22 +390,23 @@ var rootCmd = &cobra.Command{
 				mcp.WithString("searchTerm", mcp.Description("To filter documents with.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Documents for Service in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				serviceId, err := req.RequireString("serviceId")
+				if err != nil {
+					return nil, err
+				}
 				service := opslevel.Service{
 					ServiceId: opslevel.ServiceId{
-						Id: opslevel.ID(req.Params.Arguments["serviceId"].(string)),
+						Id: opslevel.ID(serviceId),
 					},
 				}
-				searchTerm := ""
-				if req.Params.Arguments["searchTerm"] != nil {
-					searchTerm = req.Params.Arguments["searchTerm"].(string)
-				}
+				searchTerm := req.GetString("searchTerm", "")
 				variables := getListDocumentPayloadVariables(searchTerm)
 				resp, err := service.GetDocuments(client, &variables)
 				return newToolResult(resp, err)
@@ -409,10 +419,10 @@ var rootCmd = &cobra.Command{
 				mcp.WithDescription("Get all the checks in the OpsLevel account. Checks provide a foundation for evaluating the maturity of software components, allowing for the definition and enforcement of criteria that ensure components are built and maintained according to best practices. Check priority is determined by level index, not level name—lower index means higher priority."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Checks in OpsLevel",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -444,19 +454,23 @@ var rootCmd = &cobra.Command{
 				mcp.WithString("serviceId", mcp.Required(), mcp.Description("The id of the service to fetch.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Rubric of Checks for Component",
-					ReadOnlyHint:    true,
-					DestructiveHint: false,
-					IdempotentHint:  true,
-					OpenWorldHint:   true,
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				service, err := client.GetService(req.Params.Arguments["serviceId"].(string))
+				serviceId, err := req.RequireString("serviceId")
+				if err != nil {
+					return nil, err
+				}
+				service, err := client.GetService(serviceId)
 				if err != nil {
 					return nil, err
 				}
 				if service.Id == "" {
-					return nil, fmt.Errorf("service with id %s not found", req.Params.Arguments["serviceId"].(string))
+					return nil, fmt.Errorf("service with id %s not found", serviceId)
 				}
 
 				stats, err := service.GetServiceStats(client)
