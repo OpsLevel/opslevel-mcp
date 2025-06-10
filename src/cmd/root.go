@@ -15,6 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/relvacode/iso8601"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -69,6 +70,25 @@ type serializedCheck struct {
 	Type        string
 	Level       serializedLevel
 	Category    string
+}
+
+type serializedCheckResult struct {
+	CheckId     string
+	CheckName   string
+	Message     string
+	Status      string
+	LastUpdated iso8601.Time
+}
+
+type serializedCheckResultsByLevel struct {
+	Level        serializedLevel
+	CheckResults []serializedCheckResult
+}
+
+type serializedCheckResults struct {
+	ByLevel      []serializedCheckResultsByLevel
+	CurrentLevel serializedLevel
+	NextLevel    *serializedLevel
 }
 
 // newToolResult creates a CallToolResult for the passed object handling any json marshaling errors
@@ -415,6 +435,68 @@ var rootCmd = &cobra.Command{
 					})
 				}
 				return newToolResult(checks, nil)
+			})
+
+		s.AddTool(
+			mcp.NewTool(
+				"componentChecks",
+				mcp.WithDescription("Get all the checks for a specific component in the OpsLevel account. Checks are organized by level in a rubric, with each level containing a set of checks that must be passed to achieve that level."),
+				mcp.WithString("serviceId", mcp.Required(), mcp.Description("The id of the service to fetch.")),
+				mcp.WithToolAnnotation(mcp.ToolAnnotation{
+					Title:           "Rubric of Checks for Component",
+					ReadOnlyHint:    true,
+					DestructiveHint: false,
+					IdempotentHint:  true,
+					OpenWorldHint:   true,
+				}),
+			),
+			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				service, err := client.GetService(req.Params.Arguments["serviceId"].(string))
+				if err != nil {
+					return nil, err
+				}
+				if service.Id == "" {
+					return nil, fmt.Errorf("service with id %s not found", req.Params.Arguments["serviceId"].(string))
+				}
+
+				stats, err := service.GetServiceStats(client)
+				if err != nil {
+					return nil, err
+				}
+
+				result := serializedCheckResults{
+					CurrentLevel: serializedLevel{
+						Alias: stats.Rubric.Level.Alias,
+						Index: stats.Rubric.Level.Index,
+					},
+				}
+				if stats.Rubric.CheckResults.NextLevel.Level.Alias != "" {
+					result.NextLevel = &serializedLevel{
+						Alias: stats.Rubric.CheckResults.NextLevel.Level.Alias,
+						Index: stats.Rubric.CheckResults.NextLevel.Level.Index,
+					}
+				}
+
+				for _, checkResultsByLevel := range stats.Rubric.CheckResults.ByLevel.Nodes {
+					byLevel := serializedCheckResultsByLevel{
+						Level: serializedLevel{
+							Alias: checkResultsByLevel.Level.Alias,
+							Index: checkResultsByLevel.Level.Index,
+						},
+					}
+					for _, checkResult := range checkResultsByLevel.Items.Nodes {
+						byLevel.CheckResults = append(byLevel.CheckResults, serializedCheckResult{
+							CheckId:     string(checkResult.Check.Id),
+							CheckName:   checkResult.Check.Name,
+							Message:     checkResult.Message,
+							Status:      string(checkResult.Status),
+							LastUpdated: checkResult.LastUpdated,
+						})
+					}
+					result.ByLevel = append(result.ByLevel, byLevel)
+				}
+
+				return newToolResult(result, nil)
 			})
 
 		log.Info().Msg("Starting MCP server...")
