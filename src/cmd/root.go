@@ -94,11 +94,11 @@ type serializedCheckResults struct {
 // newToolResult creates a CallToolResult for the passed object handling any json marshaling errors
 func newToolResult(obj any, err error) (*mcp.CallToolResult, error) {
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("operation failed", err), nil
 	}
 	data, err := json.Marshal(obj)
 	if err != nil {
-		return nil, err
+		return mcp.NewToolResultErrorFromErr("failed to marshal response", err), nil
 	}
 	return mcp.NewToolResultText(string(data)), nil
 }
@@ -215,7 +215,7 @@ var rootCmd = &cobra.Command{
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListServices(nil)
 				if err != nil {
-					return nil, err
+					return mcp.NewToolResultErrorFromErr("failed to list components", err), nil
 				}
 				var components []serializedComponent
 				for _, node := range resp.Nodes {
@@ -250,7 +250,7 @@ var rootCmd = &cobra.Command{
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListInfrastructure(nil)
 				if err != nil {
-					return nil, err
+					return mcp.NewToolResultErrorFromErr("failed to list infrastructure", err), nil
 				}
 				var infrastructureResources []serializedInfrastructureResource
 				for _, node := range resp.Nodes {
@@ -320,11 +320,11 @@ var rootCmd = &cobra.Command{
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resourceTypeString, err := req.RequireString("resourceType")
 				if err != nil {
-					return nil, err
+					return mcp.NewToolResultError("resourceType parameter is required"), nil
 				}
 				identifier, err := req.RequireString("identifier")
 				if err != nil {
-					return nil, err
+					return mcp.NewToolResultError("identifier parameter is required"), nil
 				}
 				resourceType := opslevel.AliasOwnerTypeEnum(resourceTypeString)
 				resp, err := client.GetAliasableResource(resourceType, identifier)
@@ -376,7 +376,7 @@ var rootCmd = &cobra.Command{
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				id, err := req.RequireString("id")
 				if err != nil {
-					return nil, err
+					return mcp.NewToolResultError("id parameter is required"), nil
 				}
 				resp, err := client.GetDocument(opslevel.ID(id))
 				return newToolResult(resp, err)
@@ -399,7 +399,7 @@ var rootCmd = &cobra.Command{
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				serviceId, err := req.RequireString("serviceId")
 				if err != nil {
-					return nil, err
+					return mcp.NewToolResultError("serviceId parameter is required"), nil
 				}
 				service := opslevel.Service{
 					ServiceId: opslevel.ServiceId{
@@ -428,7 +428,7 @@ var rootCmd = &cobra.Command{
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListChecks(nil)
 				if err != nil {
-					return nil, err
+					return mcp.NewToolResultErrorFromErr("failed to list checks", err), nil
 				}
 				var checks []serializedCheck
 				for _, node := range resp.Nodes {
@@ -463,19 +463,19 @@ var rootCmd = &cobra.Command{
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				serviceId, err := req.RequireString("serviceId")
 				if err != nil {
-					return nil, err
+					return mcp.NewToolResultError("serviceId parameter is required"), nil
 				}
 				service, err := client.GetService(serviceId)
 				if err != nil {
-					return nil, err
+					return mcp.NewToolResultErrorFromErr("failed to get service", err), nil
 				}
 				if service.Id == "" {
-					return nil, fmt.Errorf("service with id %s not found", serviceId)
+					return mcp.NewToolResultError(fmt.Sprintf("service with id %s not found", serviceId)), nil
 				}
 
 				stats, err := service.GetServiceStats(client)
 				if err != nil {
-					return nil, err
+					return mcp.NewToolResultErrorFromErr("failed to get service stats", err), nil
 				}
 
 				result := serializedCheckResults{
