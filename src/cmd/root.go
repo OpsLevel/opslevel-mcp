@@ -91,6 +91,22 @@ type serializedCheckResults struct {
 	NextLevel    *serializedLevel
 }
 
+type serializedCampaign struct {
+	Id           string
+	Name         string
+	ProjectBrief string
+	Status       string
+	CheckStats   opslevel.Stats
+	HtmlURL      string
+	ServiceStats opslevel.Stats
+	Filter       *opslevel.FilterId
+	Owner        *opslevel.TeamId
+	StartDate    *iso8601.Time
+	EndedDate    *iso8601.Time
+	TargetDate   *iso8601.Time
+	Reminder     *opslevel.CampaignReminder
+}
+
 // newToolResult creates a CallToolResult for the passed object handling any json marshaling errors
 func newToolResult(obj any, err error) (*mcp.CallToolResult, error) {
 	if err != nil {
@@ -511,6 +527,71 @@ var rootCmd = &cobra.Command{
 				}
 
 				return newToolResult(result, nil)
+			})
+
+		// Register campaigns tool
+		s.AddTool(
+			mcp.NewTool(
+				"campaigns",
+				mcp.WithDescription("Get all the campaigns in the OpsLevel account. Campaigns are used to track and manage initiatives or projects within OpsLevel."),
+				mcp.WithString("status", mcp.Description("Filter campaigns by status"), mcp.Enum(opslevel.AllCampaignStatusEnum...)),
+				mcp.WithToolAnnotation(mcp.ToolAnnotation{
+					Title:           "Campaigns in OpsLevel",
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
+				}),
+			),
+			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				args := &opslevel.ListCampaignsVariables{}
+				status := req.GetString("status", "")
+				if status != "" {
+					status_enum := opslevel.CampaignStatusEnum(status)
+					args.Status = &status_enum
+				}
+
+				resp, err := client.ListCampaigns(args)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to list campaigns", err), nil
+				}
+				var campaigns []serializedCampaign
+				for _, node := range resp.Nodes {
+					c := serializedCampaign{
+						Id:           string(node.Id),
+						Name:         node.Name,
+						ProjectBrief: node.ProjectBrief,
+						Status:       string(node.Status),
+						HtmlURL:      node.HtmlUrl,
+						CheckStats:   node.CheckStats,
+						ServiceStats: node.ServiceStats,
+					}
+					if node.Owner != (opslevel.TeamId{}) {
+						c.Owner = &node.Owner
+					}
+					if node.StartDate != (iso8601.Time{}) {
+						c.StartDate = &node.StartDate
+					}
+					if node.EndedDate != (iso8601.Time{}) {
+						c.EndedDate = &node.EndedDate
+					}
+					if node.TargetDate != (iso8601.Time{}) {
+						c.TargetDate = &node.TargetDate
+					}
+					if len(node.Reminder.Channels) > 0 {
+						c.Reminder = &node.Reminder
+					}
+					if node.Filter != (opslevel.FilterId{}) {
+						c.Filter = &node.Filter
+					}
+					if node.CheckStats != (opslevel.Stats{}) {
+						c.CheckStats = node.CheckStats
+					}
+
+					campaigns = append(campaigns, c)
+				}
+
+				return newToolResult(campaigns, err)
 			})
 
 		log.Info().Msg("Starting MCP server...")
