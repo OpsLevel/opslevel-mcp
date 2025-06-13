@@ -534,7 +534,7 @@ var rootCmd = &cobra.Command{
 			mcp.NewTool(
 				"campaigns",
 				mcp.WithDescription("Get all the campaigns in the OpsLevel account. Campaigns are used to track and manage initiatives or projects within OpsLevel."),
-				mcp.WithString("status", mcp.Description("Filter campaigns by status"), mcp.Enum(opslevel.AllCampaignStatusEnum...)),
+				mcp.WithString("status", mcp.Description("Filter campaigns by status, default is 'in_progress'"), mcp.Enum(opslevel.AllCampaignStatusEnum...)),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Campaigns in OpsLevel",
 					ReadOnlyHint:    &trueValue,
