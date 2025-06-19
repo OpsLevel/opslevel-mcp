@@ -27,6 +27,7 @@ This MCP ([Model Context Protocol](https://modelcontextprotocol.io/introduction)
 Currently, the MCP server only uses read-only access to your OpsLevel account and can read data from the following resources:
 
 - Actions
+- Campaigns
 - Checks
 - Components
 - Documentation (API & Tech Docs)
