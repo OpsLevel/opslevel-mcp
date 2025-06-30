@@ -15,6 +15,12 @@
         <img src="https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fapp.opslevel.com%2Fapi%2Fservice_level%2Fdlmj6PlFjehv6iLE6IQtEGXi_uz3LF9rA5nxb35wiY8" alt="Overall" /></a>
 </p>
 
+<p align="center">
+  <a href="https://glama.ai/mcp/servers/@OpsLevel/opslevel-mcp">
+    <img width="380" height="200" src="https://glama.ai/mcp/servers/@OpsLevel/opslevel-mcp/badge" />
+  </a>
+</p>
+
 
 # OpsLevel MCP Server
 
