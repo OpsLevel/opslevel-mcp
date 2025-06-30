@@ -11,17 +11,22 @@ import (
 
 func NewGraphClient(version string, options ...opslevel.Option) *opslevel.Client {
 	timeout := time.Second * time.Duration(viper.GetInt("api-timeout"))
+	api_token := viper.GetString("api-token")
 	options = append(
 		options,
-		opslevel.SetAPIToken(viper.GetString("api-token")),
+		opslevel.SetAPIToken(api_token),
 		opslevel.SetURL(viper.GetString("api-url")),
 		opslevel.SetTimeout(timeout),
 		opslevel.SetUserAgentExtra(fmt.Sprintf("mcp-%s", version)),
 	)
 	client := opslevel.NewGQLClient(options...)
 
-	clientErr := client.Validate()
-	cobra.CheckErr(clientErr)
+	// If API token is provided, ensure it's valid in OpsLevel to notify the user.
+	// If no token is provided, just allow the server to start for inspection.
+	if api_token != "" {
+		clientErr := client.Validate()
+		cobra.CheckErr(clientErr)
+	}
 
 	return client
 }
