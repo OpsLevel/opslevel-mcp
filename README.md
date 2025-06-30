@@ -3,8 +3,8 @@
         <img src="https://img.shields.io/github/license/OpsLevel/opslevel-mcp.svg" alt="License" /></a>
     <a href="https://GitHub.com/OpsLevel/opslevel-mcp/releases/">
         <img src="https://img.shields.io/github/v/release/OpsLevel/opslevel-mcp" alt="Release" /></a>
-    <a href="https://masterminds.github.io/stability/experimental.html">
-        <img src="https://masterminds.github.io/stability/experimental.svg" alt="Stability: Experimental" /></a>
+    <a href="https://masterminds.github.io/stability/active.html">
+        <img src="https://masterminds.github.io/stability/active.svg" alt="Stability: Active" /></a>
     <a href="https://github.com/OpsLevel/opslevel-mcp/graphs/contributors">
         <img src="https://img.shields.io/github/contributors/OpsLevel/opslevel-mcp" alt="Contributors" /></a>
     <a href="https://github.com/OpsLevel/opslevel-mcp/pulse">
