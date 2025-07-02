@@ -126,8 +126,9 @@ var rootCmd = &cobra.Command{
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		token := viper.GetString("api-token")
+		// Allow server to start even if token is missing
 		if token == "" {
-			return fmt.Errorf("no API token was found, use --api-token=XXX or the OPSLEVEL_API_TOKEN environment variable is required")
+			log.Warn().Msg("No API token was found. Tool requests will fail with 401 Unauthorized. Set an API token using --api-token=XXX or the OPSLEVEL_API_TOKEN environment variable.")
 		}
 
 		s := server.NewMCPServer(
