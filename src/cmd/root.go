@@ -158,14 +158,8 @@ var rootCmd = &cobra.Command{
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				searchTerm := req.GetString("searchTerm", "")
+				resp, err := client.SearchTeams(searchTerm, nil)
 
-				var resp *opslevel.TeamConnection
-				var err error
-				if searchTerm != "" {
-					resp, err = client.SearchTeams(searchTerm, nil)
-				} else {
-					resp, err = client.ListTeams(nil)
-				}
 				return newToolResult(resp.Nodes, err)
 			})
 
