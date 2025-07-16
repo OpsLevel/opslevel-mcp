@@ -146,7 +146,8 @@ var rootCmd = &cobra.Command{
 		s.AddTool(
 			mcp.NewTool(
 				"teams",
-				mcp.WithDescription("Get all the team names, identifiers and metadata for the OpsLevel account.  Teams are owners of other objects in OpsLevel. Only use this if you need to search all teams."),
+				mcp.WithDescription("Get all the team names, identifiers and metadata for the OpsLevel account.  Teams are owners of other objects in OpsLevel. Provide searchTerm when looking for a specific team by name."),
+				mcp.WithString("searchTerm", mcp.Description("The name of the team to search for. Partial matches are returned. Case insensitive.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Teams in OpsLevel",
 					ReadOnlyHint:    &trueValue,
@@ -156,7 +157,9 @@ var rootCmd = &cobra.Command{
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				resp, err := client.ListTeams(nil)
+				searchTerm := req.GetString("searchTerm", "")
+				resp, err := client.SearchTeams(searchTerm, nil)
+
 				return newToolResult(resp.Nodes, err)
 			})
 
