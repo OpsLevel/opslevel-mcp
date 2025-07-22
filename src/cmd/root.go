@@ -107,6 +107,33 @@ type serializedCampaign struct {
 	Reminder     *opslevel.CampaignReminder
 }
 
+// AccountMetadata represents the different types of account metadata that can be fetched
+type AccountMetadata string
+
+// Available metadata types
+const (
+	AccountMetadataLifecycles     AccountMetadata = "lifecycles"
+	AccountMetadataLevels         AccountMetadata = "levels"
+	AccountMetadataTiers          AccountMetadata = "tiers"
+	AccountMetadataComponentTypes AccountMetadata = "componentTypes"
+)
+
+// AllAccountMetadataStrings returns a slice of all available metadata types as strings
+func AllAccountMetadataStrings() []string {
+	types := []AccountMetadata{
+		AccountMetadataLifecycles,
+		AccountMetadataLevels,
+		AccountMetadataTiers,
+		AccountMetadataComponentTypes,
+	}
+
+	result := make([]string, len(types))
+	for i, t := range types {
+		result[i] = string(t)
+	}
+	return result
+}
+
 // newToolResult creates a CallToolResult for the passed object handling any json marshaling errors
 func newToolResult(obj any, err error) (*mcp.CallToolResult, error) {
 	if err != nil {
@@ -146,7 +173,7 @@ var rootCmd = &cobra.Command{
 		s.AddTool(
 			mcp.NewTool(
 				"teams",
-				mcp.WithDescription("Get all the team names, identifiers and metadata for the OpsLevel account.  Teams are owners of other objects in OpsLevel. Provide searchTerm when looking for a specific team by name."),
+				mcp.WithDescription("Get all team names, contact methods, and metadata for the OpsLevel account. Teams are owners of other objects in OpsLevel. Provide searchTerm when looking for a specific team by name."),
 				mcp.WithString("searchTerm", mcp.Description("The name of the team to search for. Partial matches are returned. Case insensitive.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Teams in OpsLevel",
@@ -234,7 +261,7 @@ var rootCmd = &cobra.Command{
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListServices(nil)
-				if err != nil {
+				if err != nil || resp == nil {
 					return mcp.NewToolResultErrorFromErr("failed to list components", err), nil
 				}
 				var components []serializedComponent
@@ -320,6 +347,84 @@ var rootCmd = &cobra.Command{
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListSystems(nil)
 				return newToolResult(resp.Nodes, err)
+			})
+
+		// Account metadata is lightweight data often only needed to provide context for other tool calls.
+		// We wrap it up in one tool to reduce bloat, but accept a `types` arg to allow the MCP to request what it needs specifically.
+		s.AddTool(
+			mcp.NewTool(
+				"accountMetadata",
+				mcp.WithDescription("Get metadata about the OpsLevel account including component types, tiers, & lifecycles, and maturity levels. Use this tool to retrieve relevant context (including indexes and ids for filters) before making other tool calls. Provide `types` whenever possible."),
+				mcp.WithArray("types", mcp.Description(fmt.Sprintf("Optional array of specific metadata types to fetch. Valid values: %s. If omitted, all metadata types will be fetched.", strings.Join(AllAccountMetadataStrings(), ", ")))),
+				mcp.WithToolAnnotation(mcp.ToolAnnotation{
+					Title:           "Account Metadata in OpsLevel",
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
+				}),
+			),
+			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				// Get requested types from the arguments
+				args := req.GetArguments()
+				var requestedTypes []any
+				if typesArg, exists := args["types"]; exists && typesArg != nil {
+					if typesArray, ok := typesArg.([]any); ok {
+						requestedTypes = typesArray
+					}
+				}
+				fetchAll := len(requestedTypes) == 0
+
+				// Convert to a map of AccountMetadata type -> bool for lookups
+				typesToFetch := make(map[AccountMetadata]bool)
+
+				for _, t := range requestedTypes {
+					if typeStr, ok := t.(string); ok {
+						typesToFetch[AccountMetadata(typeStr)] = true
+					}
+				}
+
+				metadata := make(map[string]any)
+				var fetchErr error
+
+				// Fetch lifecycles if requested or fetching all
+				if fetchAll || typesToFetch[AccountMetadataLifecycles] {
+					lifecycles, err := client.ListLifecycles()
+					if err != nil && fetchErr == nil {
+						fetchErr = fmt.Errorf("failed to list lifecycles: %w", err)
+					}
+					metadata[string(AccountMetadataLifecycles)] = lifecycles
+				}
+
+				// Fetch levels if requested or fetching all
+				if fetchAll || typesToFetch[AccountMetadataLevels] {
+					levels, err := client.ListLevels(nil)
+					if err != nil && fetchErr == nil {
+						fetchErr = fmt.Errorf("failed to list levels: %w", err)
+					}
+					metadata[string(AccountMetadataLevels)] = levels.Nodes
+				}
+
+				// Fetch tiers if requested or fetching all
+				if fetchAll || typesToFetch[AccountMetadataTiers] {
+					tiers, err := client.ListTiers()
+					if err != nil && fetchErr == nil {
+						fetchErr = fmt.Errorf("failed to list tiers: %w", err)
+					}
+					metadata[string(AccountMetadataTiers)] = tiers
+				}
+
+				// Fetch component types if requested or fetching all
+				if fetchAll || typesToFetch[AccountMetadataComponentTypes] {
+					componentTypes, err := client.ListComponentTypes(nil)
+					if err != nil && fetchErr == nil {
+						fetchErr = fmt.Errorf("failed to list component types: %w", err)
+					}
+					metadata[string(AccountMetadataComponentTypes)] = componentTypes.Nodes
+				}
+
+				// Return any metadata we could fetch, along with any error
+				return newToolResult(metadata, fetchErr)
 			})
 
 		// Register ability to fetch a single resource by ID or alias
