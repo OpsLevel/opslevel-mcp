@@ -261,9 +261,9 @@ var rootCmd = &cobra.Command{
 				"components",
 				mcp.WithDescription(`Filter and retrieve components in the OpsLevel catalog. Use as specific a filter as possible to narrow down results and avoid fetching a high number of components.
 
-Components represent services, APIs, libraries, and other software artifacts with metadata such as owner (Team), language, framework, maturity level, lifecycle stage, and tier. Lower tier_index indicates greater criticality. Lower level_index indicates lower maturity level (e.g. Bronze=0, Silver=1, Gold=2).
+Components represent services, APIs, libraries, and other software artifacts with metadata such as owner (Team), language, framework, maturity level, lifecycle stage, and tier. Lower tier_index indicates greater criticality. Lower level_index indicates lower maturity level (e.g. Bronze="0", Silver="1", Gold="2").
 
-Use the 'filter' parameter to narrow down results.
+Use the 'filter' parameter to narrow down results. 'filter' "arg" must always be a string.
 For simple filters:
   { "key": "name", "type": "equals", "arg": "service-name" }
   
@@ -302,16 +302,17 @@ For complete reference:
 				if filterObj, exists := args["filter"]; exists && filterObj != nil {
 					// Marshal then unmarshal to our struct for type safety
 					filterBytes, marshalErr := json.Marshal(filterObj)
-					if marshalErr == nil {
-						var f componentFilter
-						if unmarshalErr := json.Unmarshal(filterBytes, &f); unmarshalErr == nil {
-							filterInput = &f
-						}
+					if marshalErr != nil {
+						return mcp.NewToolResultErrorFromErr("failed to marshal filter argument", marshalErr), nil
 					}
+					var f componentFilter
+					if unmarshalErr := json.Unmarshal(filterBytes, &f); unmarshalErr != nil {
+						return mcp.NewToolResultErrorFromErr("failed to unmarshal filter argument", unmarshalErr), nil
+					}
+					filterInput = &f
 				}
 
 				if filterInput != nil {
-					// Convert to ServiceFilterInput for the API
 					serviceFilter, convertErr := convertToServiceFilterInput(*filterInput)
 					if convertErr != nil {
 						return mcp.NewToolResultErrorFromErr("failed to convert filter", convertErr), nil
