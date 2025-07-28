@@ -302,16 +302,17 @@ For complete reference:
 				if filterObj, exists := args["filter"]; exists && filterObj != nil {
 					// Marshal then unmarshal to our struct for type safety
 					filterBytes, marshalErr := json.Marshal(filterObj)
-					if marshalErr == nil {
-						var f componentFilter
-						if unmarshalErr := json.Unmarshal(filterBytes, &f); unmarshalErr == nil {
-							filterInput = &f
-						}
+					if marshalErr != nil {
+						return mcp.NewToolResultErrorFromErr("failed to marshal filter argument", marshalErr), nil
 					}
+					var f componentFilter
+					if unmarshalErr := json.Unmarshal(filterBytes, &f); unmarshalErr != nil {
+						return mcp.NewToolResultErrorFromErr("failed to unmarshal filter argument", unmarshalErr), nil
+					}
+					filterInput = &f
 				}
 
 				if filterInput != nil {
-					// Convert to ServiceFilterInput for the API
 					serviceFilter, convertErr := convertToServiceFilterInput(*filterInput)
 					if convertErr != nil {
 						return mcp.NewToolResultErrorFromErr("failed to convert filter", convertErr), nil
