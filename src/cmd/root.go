@@ -261,9 +261,9 @@ var rootCmd = &cobra.Command{
 				"components",
 				mcp.WithDescription(`Filter and retrieve components in the OpsLevel catalog. Use as specific a filter as possible to narrow down results and avoid fetching a high number of components.
 
-Components represent services, APIs, libraries, and other software artifacts with metadata such as owner (Team), language, framework, maturity level, lifecycle stage, and tier. Lower tier_index indicates greater criticality. Lower level_index indicates lower maturity level (e.g. Bronze=0, Silver=1, Gold=2).
+Components represent services, APIs, libraries, and other software artifacts with metadata such as owner (Team), language, framework, maturity level, lifecycle stage, and tier. Lower tier_index indicates greater criticality. Lower level_index indicates lower maturity level (e.g. Bronze="0", Silver="1", Gold="2").
 
-Use the 'filter' parameter to narrow down results.
+Use the 'filter' parameter to narrow down results. 'filter' "arg" must always be a string.
 For simple filters:
   { "key": "name", "type": "equals", "arg": "service-name" }
   
