@@ -1,4 +1,0 @@
-kind: Added
-body: Add an `accountMetadata` tool that allows looking up lifecycles, tiers, levels,
-  and component types on an account.
-time: 2025-07-22T13:39:04.842032-07:00

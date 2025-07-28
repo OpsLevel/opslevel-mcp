@@ -1,4 +1,0 @@
-kind: Added
-body: Add a filter argument to components to vastly decrease token and context usage
-  while improving success of reporting-style queries.
-time: 2025-07-22T14:04:04.510339-07:00

@@ -1,3 +1,0 @@
-kind: Changed
-body: Allow the MCP Server to start with no OPSLEVEL_API_TOKEN so it can be inspected and tested. Tools will not work without a valid OpsLevel API token.
-time: 2025-06-30T12:51:23.374588-07:00
