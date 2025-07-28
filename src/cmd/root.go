@@ -134,6 +134,15 @@ func AllAccountMetadataStrings() []string {
 	return result
 }
 
+// componentFilter represents the filter structure for the components tool
+type componentFilter struct {
+	Key        string            `json:"key,omitempty"`
+	Type       string            `json:"type,omitempty"`
+	Arg        string            `json:"arg,omitempty"`
+	Connective string            `json:"connective,omitempty"`
+	Predicates []componentFilter `json:"predicates,omitempty"`
+}
+
 // newToolResult creates a CallToolResult for the passed object handling any json marshaling errors
 func newToolResult(obj any, err error) (*mcp.CallToolResult, error) {
 	if err != nil {
@@ -250,7 +259,31 @@ var rootCmd = &cobra.Command{
 		s.AddTool(
 			mcp.NewTool(
 				"components",
-				mcp.WithDescription("Get all the components in the OpsLevel account.  Components are objects in OpsLevel that represent things like apis, libraries, services, frontends, backends, etc. Use this tool to list what components are in the catalog, what team is the owner, what primary coding language is used, and what primary framework is used. It also includes its rubric level, corresponding to the maturity of the component; a higher index is better. A level is achieved by passing all checks tied to that same level. The Lifecycle field indicates the stage of the component (e.g., Alpha, Beta, GA, Decommissioned). The Tier field represents the importance and criticality of the component, with Tier 1 being the most critical (customer-facing with high impact) and Tier 4 being of least importance."),
+				mcp.WithDescription(`Filter and retrieve components in the OpsLevel catalog. Use as specific a filter as possible to narrow down results and avoid fetching a high number of components.
+
+Components represent services, APIs, libraries, and other software artifacts with metadata such as owner (Team), language, framework, maturity level, lifecycle stage, and tier. Lower tier_index indicates greater criticality. Lower level_index indicates lower maturity level (e.g. Bronze=0, Silver=1, Gold=2).
+
+Use the 'filter' parameter to narrow down results.
+For simple filters:
+  { "key": "name", "type": "equals", "arg": "service-name" }
+  
+For better precision, use composite filters:
+  { 
+    "connective": "and", 
+    "predicates": [
+      { "key": "language", "type": "equals", "arg": "Python" },
+      { "key": "owner_id", "type": "equals", "arg": "gid://opslevel/Team/123" }
+    ]
+  }
+
+Common filter keys: name, language, framework, owner_id, tags, tier_index, lifecycle_index
+Common filter types: equals, contains, matches, exists, greater_than_or_equal_to
+
+For complete reference:
+- Keys: aliases, alert_status, component_type_id, creation_source, deploy_environment, domain_id, filter_id, framework, group_ids, language, level_index, lifecycle_index, name, owner_id, owner_ids, product, properties, property, relationship, repository_ids, system_id, tag, tags, tier_index
+- Types: belongs_to, contains, does_not_contain, does_not_equal, does_not_exist, does_not_match, does_not_match_regex, ends_with, equals, exists, greater_than_or_equal_to, less_than_or_equal_to, matches, matches_regex, satisfies_jq_expression
+`),
+				mcp.WithObject("filter", mcp.Description("Optional filter for components. For simple filters, provide {key, type, arg}. For composite filters, provide {connective, predicates}. See description for allowed values and format.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Components in OpsLevel",
 					ReadOnlyHint:    &trueValue,
@@ -260,7 +293,34 @@ var rootCmd = &cobra.Command{
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				resp, err := client.ListServices(nil)
+				var resp *opslevel.ServiceConnection
+				var err error
+				var filterInput *componentFilter
+
+				// Get the arguments map using the helper method
+				args := req.GetArguments()
+				if filterObj, exists := args["filter"]; exists && filterObj != nil {
+					// Marshal then unmarshal to our struct for type safety
+					filterBytes, marshalErr := json.Marshal(filterObj)
+					if marshalErr == nil {
+						var f componentFilter
+						if unmarshalErr := json.Unmarshal(filterBytes, &f); unmarshalErr == nil {
+							filterInput = &f
+						}
+					}
+				}
+
+				if filterInput != nil {
+					// Convert to ServiceFilterInput for the API
+					serviceFilter, convertErr := convertToServiceFilterInput(*filterInput)
+					if convertErr != nil {
+						return mcp.NewToolResultErrorFromErr("failed to convert filter", convertErr), nil
+					}
+					resp, err = client.ListServicesWithInputFilter(serviceFilter, nil)
+				} else {
+					resp, err = client.ListServices(nil)
+				}
+
 				if err != nil || resp == nil {
 					return mcp.NewToolResultErrorFromErr("failed to list components", err), nil
 				}
@@ -773,4 +833,35 @@ func getListDocumentPayloadVariables(searchTerm string) opslevel.PayloadVariable
 		"after":      "",
 		"first":      100,
 	}
+}
+
+// convertToServiceFilterInput converts a componentFilter to a ServiceFilterInput for the OpsLevel API
+func convertToServiceFilterInput(filter componentFilter) (opslevel.ServiceFilterInput, error) {
+	// Handle simple filter
+	if filter.Key != "" && filter.Type != "" {
+		return opslevel.ServiceFilterInput{
+			Key:  opslevel.PredicateKeyEnum(filter.Key),
+			Arg:  filter.Arg,
+			Type: opslevel.PredicateTypeEnum(filter.Type),
+		}, nil
+	}
+
+	// Handle composite filter
+	if filter.Connective != "" && len(filter.Predicates) > 0 {
+		var predInputs []opslevel.ServiceFilterInput
+		for _, p := range filter.Predicates {
+			predInput, err := convertToServiceFilterInput(p)
+			if err != nil {
+				return opslevel.ServiceFilterInput{}, err
+			}
+			predInputs = append(predInputs, predInput)
+		}
+		connective := opslevel.ConnectiveEnum(filter.Connective)
+		return opslevel.ServiceFilterInput{
+			Connective: &connective,
+			Predicates: &predInputs,
+		}, nil
+	}
+
+	return opslevel.ServiceFilterInput{}, fmt.Errorf("invalid filter format")
 }
