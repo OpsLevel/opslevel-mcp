@@ -6,7 +6,7 @@ toolchain go1.24.2
 
 require (
 	github.com/mark3labs/mcp-go v0.34.0
-	github.com/opslevel/opslevel-go/v2025 v2025.5.28
+	github.com/opslevel/opslevel-go/v2025 v2025.7.28
 	github.com/relvacode/iso8601 v1.6.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
@@ -55,4 +55,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/opslevel/opslevel-go/v2025 => ./submodules/opslevel-go
+// replace github.com/opslevel/opslevel-go/v2025 => ./submodules/opslevel-go
