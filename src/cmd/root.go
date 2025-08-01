@@ -416,7 +416,11 @@ For complete reference:
 			mcp.NewTool(
 				"accountMetadata",
 				mcp.WithDescription("Get metadata about the OpsLevel account including component types, tiers, & lifecycles, and maturity levels. Use this tool to retrieve relevant context (including indexes and ids for filters) before making other tool calls. Provide `types` whenever possible."),
-				mcp.WithArray("types", mcp.Description(fmt.Sprintf("Optional array of specific metadata types to fetch. Valid values: %s. If omitted, all metadata types will be fetched.", strings.Join(AllAccountMetadataStrings(), ", ")))),
+				mcp.WithArray(
+					"types", 
+					mcp.Description(fmt.Sprintf("Optional array of specific metadata types to fetch. Valid values: %s. If omitted, all metadata types will be fetched.", strings.Join(AllAccountMetadataStrings(), ", "))), 
+					mcp.WithStringEnumItems(AllAccountMetadataStrings()),
+				),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Account Metadata in OpsLevel",
 					ReadOnlyHint:    &trueValue,
