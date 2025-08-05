@@ -1,0 +1,3 @@
+kind: Fixed
+body: Add `items` to accountMetadata input schema to adhere to OpenAPI array spec
+time: 2025-08-05T07:25:56.153661-07:00
