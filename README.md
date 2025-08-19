@@ -13,6 +13,8 @@
         <img src="https://img.shields.io/github/downloads/OpsLevel/opslevel-mcp/total" alt="Downloads" /></a>
     <a href="https://app.opslevel.com/services/opslevel_mcp/maturity-report">
         <img src="https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fapp.opslevel.com%2Fapi%2Fservice_level%2Fdlmj6PlFjehv6iLE6IQtEGXi_uz3LF9rA5nxb35wiY8" alt="Overall" /></a>
+
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/opslevel/opslevel-mcp)](https://archestra.ai/mcp-catalog/opslevel__opslevel-mcp)
 </p>
 
 <p align="center">
