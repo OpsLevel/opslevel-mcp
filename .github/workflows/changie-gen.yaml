@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: Checkout branch that Dependabot labeled
       if: github.event.workflow_run.conclusion == 'success'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         ref: ${{ env.PR_BRANCH }}
         token: ${{ secrets.ORG_GITHUB_TOKEN }}
