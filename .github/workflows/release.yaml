@@ -84,7 +84,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6.3.0
+        uses: goreleaser/goreleaser-action@v6.4.0
         with:
           args: release --clean --release-notes=../.changes/${{ steps.version.outputs.RELEASE_VERSION }}.md
           workdir: ./src
