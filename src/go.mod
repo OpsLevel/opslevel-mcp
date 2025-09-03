@@ -6,7 +6,7 @@ toolchain go1.24.2
 
 require (
 	github.com/mark3labs/mcp-go v0.34.0
-	github.com/opslevel/opslevel-go/v2025 v2025.7.28
+	github.com/opslevel/opslevel-go/v2025 v2025.8.5
 	github.com/relvacode/iso8601 v1.6.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
@@ -27,8 +27,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gosimple/slug v1.15.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
-	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/hasura/go-graphql-client v0.14.4 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
