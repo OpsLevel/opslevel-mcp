@@ -5,6 +5,7 @@ go 1.24
 toolchain go1.24.2
 
 require (
+	github.com/DataDog/datadog-go/v5 v5.7.1
 	github.com/mark3labs/mcp-go v0.34.0
 	github.com/opslevel/opslevel-go/v2025 v2025.7.28
 	github.com/relvacode/iso8601 v1.6.0
@@ -14,6 +15,7 @@ require (
 )
 
 require (
+	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/coder/websocket v1.8.13 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect

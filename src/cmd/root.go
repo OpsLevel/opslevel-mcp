@@ -175,6 +175,21 @@ var rootCmd = &cobra.Command{
 
 		client := NewGraphClient(version)
 
+		telemetry, err := NewTelemetry(client)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to initialize telemetry")
+			// We can continue without telemetry
+		}
+
+		wrapWithTelemetry := func(toolName string, handler mcp.ToolHandler) mcp.ToolHandler {
+			return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				if telemetry != nil {
+					telemetry.Track(toolName, req.GetArguments())
+				}
+				return handler(ctx, req)
+			}
+		}
+
 		trueValue := true
 		falseValue := false
 
@@ -192,12 +207,12 @@ var rootCmd = &cobra.Command{
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("teams", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				searchTerm := req.GetString("searchTerm", "")
 				resp, err := client.SearchTeams(searchTerm, nil)
 
 				return newToolResult(resp.Nodes, err)
-			})
+			}))
 
 		// Register Users
 		s.AddTool(
@@ -212,10 +227,10 @@ var rootCmd = &cobra.Command{
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("users", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListUsers(nil)
 				return newToolResult(resp.Nodes, err)
-			})
+			}))
 
 		// Register Actions
 		s.AddTool(
@@ -231,10 +246,10 @@ var rootCmd = &cobra.Command{
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("actions", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListTriggerDefinitions(nil)
 				return newToolResult(resp.Nodes, err)
-			})
+			}))
 
 		// Register Filters
 		s.AddTool(
@@ -250,10 +265,10 @@ var rootCmd = &cobra.Command{
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("filters", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListFilters(nil)
 				return newToolResult(resp.Nodes, err)
-			})
+			}))
 
 		// Register Components
 		s.AddTool(
@@ -292,7 +307,7 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("components", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				var resp *opslevel.ServiceConnection
 				var err error
 				var filterInput *componentFilter
@@ -340,7 +355,7 @@ For complete reference:
 					})
 				}
 				return newToolResult(components, nil)
-			})
+			}))
 
 		// Register Infra
 		s.AddTool(
@@ -355,7 +370,7 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("infrastructure", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListInfrastructure(nil)
 				if err != nil {
 					return mcp.NewToolResultErrorFromErr("failed to list infrastructure", err), nil
@@ -372,7 +387,7 @@ For complete reference:
 					})
 				}
 				return newToolResult(infrastructureResources, nil)
-			})
+			}))
 
 		// Register Domains
 		s.AddTool(
@@ -387,10 +402,10 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("domains", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListDomains(nil)
 				return newToolResult(resp.Nodes, err)
-			})
+			}))
 
 		// Register Systems
 		s.AddTool(
@@ -405,10 +420,10 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("systems", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListSystems(nil)
 				return newToolResult(resp.Nodes, err)
-			})
+			}))
 
 		// Account metadata is lightweight data often only needed to provide context for other tool calls.
 		// We wrap it up in one tool to reduce bloat, but accept a `types` arg to allow the MCP to request what it needs specifically.
@@ -429,7 +444,7 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("accountMetadata", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				// Get requested types from the arguments
 				args := req.GetArguments()
 				var requestedTypes []any
@@ -490,7 +505,7 @@ For complete reference:
 
 				// Return any metadata we could fetch, along with any error
 				return newToolResult(metadata, fetchErr)
-			})
+			}))
 
 		// Register ability to fetch a single resource by ID or alias
 		s.AddTool(
@@ -507,7 +522,7 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("resourceDetails", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resourceTypeString, err := req.RequireString("resourceType")
 				if err != nil {
 					return mcp.NewToolResultError("resourceType parameter is required"), nil
@@ -528,7 +543,7 @@ For complete reference:
 				default:
 					return newToolResult(resp, err)
 				}
-			})
+			}))
 
 		// Register all documents, filtered by search term
 		s.AddTool(
@@ -543,12 +558,12 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("documents", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				searchTerm := req.GetString("searchTerm", "")
 				variables := getListDocumentPayloadVariables(searchTerm)
 				resp, err := client.ListDocuments(&variables)
 				return newToolResult(resp.Nodes, err)
-			})
+			}))
 
 		// Register document by id
 		s.AddTool(
@@ -563,14 +578,14 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("document", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				id, err := req.RequireString("id")
 				if err != nil {
 					return mcp.NewToolResultError("id parameter is required"), nil
 				}
 				resp, err := client.GetDocument(opslevel.ID(id))
 				return newToolResult(resp, err)
-			})
+			}))
 
 		// Register all documents, filtered by service id and search term
 		s.AddTool(
@@ -586,7 +601,7 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("documentsOnService", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				serviceId, err := req.RequireString("serviceId")
 				if err != nil {
 					return mcp.NewToolResultError("serviceId parameter is required"), nil
@@ -600,7 +615,7 @@ For complete reference:
 				variables := getListDocumentPayloadVariables(searchTerm)
 				resp, err := service.GetDocuments(client, &variables)
 				return newToolResult(resp, err)
-			})
+			}))
 
 		// Register checks
 		s.AddTool(
@@ -615,7 +630,7 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("checks", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListChecks(nil)
 				if err != nil {
 					return mcp.NewToolResultErrorFromErr("failed to list checks", err), nil
@@ -635,7 +650,7 @@ For complete reference:
 					})
 				}
 				return newToolResult(checks, nil)
-			})
+			}))
 
 		s.AddTool(
 			mcp.NewTool(
@@ -650,7 +665,7 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("componentChecks", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				serviceId, err := req.RequireString("serviceId")
 				if err != nil {
 					return mcp.NewToolResultError("serviceId parameter is required"), nil
@@ -701,7 +716,7 @@ For complete reference:
 				}
 
 				return newToolResult(result, nil)
-			})
+			}))
 
 		// Register campaigns tool
 		s.AddTool(
@@ -717,7 +732,7 @@ For complete reference:
 					OpenWorldHint:   &trueValue,
 				}),
 			),
-			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			wrapWithTelemetry("campaigns", func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				args := &opslevel.ListCampaignsVariables{}
 				status := req.GetString("status", "")
 				if status != "" {
@@ -766,7 +781,7 @@ For complete reference:
 				}
 
 				return newToolResult(campaigns, err)
-			})
+			}))
 
 		log.Info().Msg("Starting MCP server...")
 		if err := server.ServeStdio(s); err != nil {
