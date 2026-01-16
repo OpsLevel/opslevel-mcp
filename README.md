@@ -3,6 +3,10 @@
         <img src="https://img.shields.io/github/license/OpsLevel/opslevel-mcp.svg" alt="License" /></a>
     <a href="https://GitHub.com/OpsLevel/opslevel-mcp/releases/">
         <img src="https://img.shields.io/github/v/release/OpsLevel/opslevel-mcp" alt="Release" /></a>
+    <a href="https://github.com/OpsLevel/opslevel-mcp/actions/workflows/tests.yml">
+        <img src="https://github.com/OpsLevel/opslevel-mcp/actions/workflows/tests.yml/badge.svg" alt="Tests" /></a>
+    <a href="https://github.com/OpsLevel/opslevel-mcp/actions/workflows/mcp-eval-tests.yml">
+        <img src="https://github.com/OpsLevel/opslevel-mcp/actions/workflows/mcp-eval-tests.yml/badge.svg" alt="MCP Eval Tests" /></a>
     <a href="https://masterminds.github.io/stability/active.html">
         <img src="https://masterminds.github.io/stability/active.svg" alt="Stability: Active" /></a>
     <a href="https://github.com/OpsLevel/opslevel-mcp/graphs/contributors">
@@ -201,3 +205,63 @@ If you didn't install the binary directly and instead pulled the docker image yo
           "public.ecr.aws/opslevel/mcp:latest"
         ],
 ```
+
+# Development
+
+## Testing
+
+This repository uses a comprehensive test suite to ensure code quality and functionality.
+
+### Running Tests
+
+#### Go Tests
+
+The Go codebase (main MCP server) includes unit tests for core functionality:
+
+```bash
+# Run all Go tests
+cd src
+go test ./...
+
+# Run tests with coverage
+go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+# Run tests with verbose output
+go test -v ./...
+```
+
+#### JavaScript Tests
+
+The `mcp-eval` evaluation framework includes Jest-based tests:
+
+```bash
+# Run all JavaScript tests
+cd mcp-eval
+npm test
+
+# Run tests in watch mode
+npm test -- --watch
+```
+
+#### Using Task
+
+The repository uses [Task](https://taskfile.dev/) as a task runner. To run the full CI pipeline locally:
+
+```bash
+# Run linting and tests
+task ci
+
+# Run only tests
+task test
+
+# Run only linting
+task lint
+```
+
+### Continuous Integration
+
+All tests are automatically run on:
+- Pull requests to the main branch
+- Pushes to the main branch
+
+The CI pipeline runs linting, formatting checks, and the complete test suite to ensure code quality.
