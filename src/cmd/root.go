@@ -107,6 +107,14 @@ type serializedCampaign struct {
 	Reminder     *opslevel.CampaignReminder
 }
 
+type serializedDependency struct {
+	Id        string
+	ServiceId string
+	Aliases   []string
+	Locked    bool
+	Notes     string
+}
+
 // AccountMetadata represents the different types of account metadata that can be fetched
 type AccountMetadata string
 
@@ -766,6 +774,118 @@ For complete reference:
 				}
 
 				return newToolResult(campaigns, err)
+			})
+
+		// Register component dependencies tool
+		s.AddTool(
+			mcp.NewTool(
+				"componentDependencies",
+				mcp.WithDescription("Get all the services that a specific component depends on. Returns the dependency graph showing which services this component consumes or calls."),
+				mcp.WithString("serviceId", mcp.Required(), mcp.Description("The id of the service to fetch dependencies for.")),
+				mcp.WithString("search", mcp.Description("Optional search term to filter dependencies by name.")),
+				mcp.WithToolAnnotation(mcp.ToolAnnotation{
+					Title:           "Component Dependencies in OpsLevel",
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
+				}),
+			),
+			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				serviceId, err := req.RequireString("serviceId")
+				if err != nil {
+					return mcp.NewToolResultError("serviceId parameter is required"), nil
+				}
+
+				service := opslevel.Service{
+					ServiceId: opslevel.ServiceId{
+						Id: opslevel.ID(serviceId),
+					},
+				}
+
+				search := req.GetString("search", "")
+				variables := &opslevel.PayloadVariables{
+					"after": "",
+					"first": 100,
+				}
+				if search != "" {
+					(*variables)["search"] = search
+				}
+
+				resp, err := service.GetDependencies(client, variables)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to get dependencies", err), nil
+				}
+
+				var dependencies []serializedDependency
+				for _, edge := range resp.Edges {
+					dep := serializedDependency{
+						Id:        string(edge.Id),
+						ServiceId: string(edge.Node.Id),
+						Aliases:   edge.Node.Aliases,
+						Locked:    edge.Locked,
+						Notes:     edge.Notes,
+					}
+					dependencies = append(dependencies, dep)
+				}
+
+				return newToolResult(dependencies, nil)
+			})
+
+		// Register component dependents tool
+		s.AddTool(
+			mcp.NewTool(
+				"componentDependents",
+				mcp.WithDescription("Get all the services that depend on a specific component. Returns the reverse dependency graph showing which services consume or call this component."),
+				mcp.WithString("serviceId", mcp.Required(), mcp.Description("The id of the service to fetch dependents for.")),
+				mcp.WithString("search", mcp.Description("Optional search term to filter dependents by name.")),
+				mcp.WithToolAnnotation(mcp.ToolAnnotation{
+					Title:           "Component Dependents in OpsLevel",
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
+				}),
+			),
+			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				serviceId, err := req.RequireString("serviceId")
+				if err != nil {
+					return mcp.NewToolResultError("serviceId parameter is required"), nil
+				}
+
+				service := opslevel.Service{
+					ServiceId: opslevel.ServiceId{
+						Id: opslevel.ID(serviceId),
+					},
+				}
+
+				search := req.GetString("search", "")
+				variables := &opslevel.PayloadVariables{
+					"after": "",
+					"first": 100,
+				}
+				if search != "" {
+					(*variables)["search"] = search
+				}
+
+				resp, err := service.GetDependents(client, variables)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to get dependents", err), nil
+				}
+
+				var dependents []serializedDependency
+				for _, edge := range resp.Edges {
+					dep := serializedDependency{
+						Id:        string(edge.Id),
+						ServiceId: string(edge.Node.Id),
+						Aliases:   edge.Node.Aliases,
+						Locked:    edge.Locked,
+						Notes:     edge.Notes,
+					}
+					dependents = append(dependents, dep)
+				}
+
+				return newToolResult(dependents, nil)
 			})
 
 		log.Info().Msg("Starting MCP server...")
