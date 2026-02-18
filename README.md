@@ -38,8 +38,8 @@ Currently, the MCP server only uses read-only access to your OpsLevel account an
 - Campaigns
 - Checks
 - Components
-- Component Dependencies (services that a component depends on)
-- Component Dependents (services that depend on a component)
+- Component Dependencies (components that a component depends on)
+- Component Dependents (components that depend on a component)
 - Documentation (API & Tech Docs)
 - Domains
 - Filters
