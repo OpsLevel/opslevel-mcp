@@ -107,6 +107,13 @@ type serializedCampaign struct {
 	Reminder     *opslevel.CampaignReminder
 }
 
+type serializedDependency struct {
+	Id          string
+	ComponentId string
+	Aliases     []string
+	Notes       string
+}
+
 // AccountMetadata represents the different types of account metadata that can be fetched
 type AccountMetadata string
 
@@ -766,6 +773,110 @@ For complete reference:
 				}
 
 				return newToolResult(campaigns, err)
+			})
+
+		// Register component dependencies tool
+		s.AddTool(
+			mcp.NewTool(
+				"componentDependencies",
+				mcp.WithDescription("Get all the components that a specific component depends on. Returns the dependency graph showing which components this component consumes or calls."),
+				mcp.WithString("componentId", mcp.Required(), mcp.Description("The id of the component to fetch dependencies for.")),
+				mcp.WithToolAnnotation(mcp.ToolAnnotation{
+					Title:           "Component Dependencies in OpsLevel",
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
+				}),
+			),
+			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				componentId, err := req.RequireString("componentId")
+				if err != nil {
+					return mcp.NewToolResultError("componentId parameter is required"), nil
+				}
+
+				service, err := client.GetService(componentId)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to get component", err), nil
+				}
+				if service.Id == "" {
+					return mcp.NewToolResultError(fmt.Sprintf("component with id %s not found", componentId)), nil
+				}
+
+				variables := &opslevel.PayloadVariables{
+					"after": "",
+					"first": 100,
+				}
+
+				resp, err := service.GetDependencies(client, variables)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to get dependencies", err), nil
+				}
+
+				dependencies := []serializedDependency{}
+				for _, edge := range resp.Edges {
+					dep := serializedDependency{
+						Id:          string(edge.Id),
+						ComponentId: string(edge.Node.Id),
+						Aliases:     edge.Node.Aliases,
+						Notes:       edge.Notes,
+					}
+					dependencies = append(dependencies, dep)
+				}
+
+				return newToolResult(dependencies, nil)
+			})
+
+		// Register component dependents tool
+		s.AddTool(
+			mcp.NewTool(
+				"componentDependents",
+				mcp.WithDescription("Get all the components that depend on a specific component. Returns the reverse dependency graph showing which components consume or call this component."),
+				mcp.WithString("componentId", mcp.Required(), mcp.Description("The id of the component to fetch dependents for.")),
+				mcp.WithToolAnnotation(mcp.ToolAnnotation{
+					Title:           "Component Dependents in OpsLevel",
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
+				}),
+			),
+			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				componentId, err := req.RequireString("componentId")
+				if err != nil {
+					return mcp.NewToolResultError("componentId parameter is required"), nil
+				}
+
+				service, err := client.GetService(componentId)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to get component", err), nil
+				}
+				if service.Id == "" {
+					return mcp.NewToolResultError(fmt.Sprintf("component with id %s not found", componentId)), nil
+				}
+
+				variables := &opslevel.PayloadVariables{
+					"after": "",
+					"first": 100,
+				}
+
+				resp, err := service.GetDependents(client, variables)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to get dependents", err), nil
+				}
+
+				dependents := []serializedDependency{}
+				for _, edge := range resp.Edges {
+					dep := serializedDependency{
+						Id:          string(edge.Id),
+						ComponentId: string(edge.Node.Id),
+						Aliases:     edge.Node.Aliases,
+						Notes:       edge.Notes,
+					}
+					dependents = append(dependents, dep)
+				}
+
+				return newToolResult(dependents, nil)
 			})
 
 		log.Info().Msg("Starting MCP server...")
