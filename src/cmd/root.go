@@ -779,8 +779,8 @@ For complete reference:
 		s.AddTool(
 			mcp.NewTool(
 				"componentDependencies",
-				mcp.WithDescription("Get all the services that a specific component depends on. Returns the dependency graph showing which services this component consumes or calls."),
-				mcp.WithString("serviceId", mcp.Required(), mcp.Description("The id of the service to fetch dependencies for.")),
+				mcp.WithDescription("Get all the components that a specific component depends on. Returns the dependency graph showing which components this component consumes or calls."),
+				mcp.WithString("componentId", mcp.Required(), mcp.Description("The id of the component to fetch dependencies for.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Component Dependencies in OpsLevel",
 					ReadOnlyHint:    &trueValue,
@@ -790,17 +790,17 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				serviceId, err := req.RequireString("serviceId")
+				componentId, err := req.RequireString("componentId")
 				if err != nil {
-					return mcp.NewToolResultError("serviceId parameter is required"), nil
+					return mcp.NewToolResultError("componentId parameter is required"), nil
 				}
 
-				service, err := client.GetService(serviceId)
+				service, err := client.GetService(componentId)
 				if err != nil {
-					return mcp.NewToolResultErrorFromErr("failed to get service", err), nil
+					return mcp.NewToolResultErrorFromErr("failed to get component", err), nil
 				}
 				if service.Id == "" {
-					return mcp.NewToolResultError(fmt.Sprintf("service with id %s not found", serviceId)), nil
+					return mcp.NewToolResultError(fmt.Sprintf("component with id %s not found", componentId)), nil
 				}
 
 				variables := &opslevel.PayloadVariables{
@@ -831,8 +831,8 @@ For complete reference:
 		s.AddTool(
 			mcp.NewTool(
 				"componentDependents",
-				mcp.WithDescription("Get all the services that depend on a specific component. Returns the reverse dependency graph showing which services consume or call this component."),
-				mcp.WithString("serviceId", mcp.Required(), mcp.Description("The id of the service to fetch dependents for.")),
+				mcp.WithDescription("Get all the components that depend on a specific component. Returns the reverse dependency graph showing which components consume or call this component."),
+				mcp.WithString("componentId", mcp.Required(), mcp.Description("The id of the component to fetch dependents for.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Component Dependents in OpsLevel",
 					ReadOnlyHint:    &trueValue,
@@ -842,17 +842,17 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				serviceId, err := req.RequireString("serviceId")
+				componentId, err := req.RequireString("componentId")
 				if err != nil {
-					return mcp.NewToolResultError("serviceId parameter is required"), nil
+					return mcp.NewToolResultError("componentId parameter is required"), nil
 				}
 
-				service, err := client.GetService(serviceId)
+				service, err := client.GetService(componentId)
 				if err != nil {
-					return mcp.NewToolResultErrorFromErr("failed to get service", err), nil
+					return mcp.NewToolResultErrorFromErr("failed to get component", err), nil
 				}
 				if service.Id == "" {
-					return mcp.NewToolResultError(fmt.Sprintf("service with id %s not found", serviceId)), nil
+					return mcp.NewToolResultError(fmt.Sprintf("component with id %s not found", componentId)), nil
 				}
 
 				variables := &opslevel.PayloadVariables{
