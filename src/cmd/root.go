@@ -108,11 +108,10 @@ type serializedCampaign struct {
 }
 
 type serializedDependency struct {
-	Id        string
-	ServiceId string
-	Aliases   []string
-	Locked    bool
-	Notes     string
+	Id          string
+	ComponentId string
+	Aliases     []string
+	Notes       string
 }
 
 // AccountMetadata represents the different types of account metadata that can be fetched
@@ -782,7 +781,6 @@ For complete reference:
 				"componentDependencies",
 				mcp.WithDescription("Get all the services that a specific component depends on. Returns the dependency graph showing which services this component consumes or calls."),
 				mcp.WithString("serviceId", mcp.Required(), mcp.Description("The id of the service to fetch dependencies for.")),
-				mcp.WithString("search", mcp.Description("Optional search term to filter dependencies by name.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Component Dependencies in OpsLevel",
 					ReadOnlyHint:    &trueValue,
@@ -797,19 +795,17 @@ For complete reference:
 					return mcp.NewToolResultError("serviceId parameter is required"), nil
 				}
 
-				service := opslevel.Service{
-					ServiceId: opslevel.ServiceId{
-						Id: opslevel.ID(serviceId),
-					},
+				service, err := client.GetService(serviceId)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to get service", err), nil
+				}
+				if service.Id == "" {
+					return mcp.NewToolResultError(fmt.Sprintf("service with id %s not found", serviceId)), nil
 				}
 
-				search := req.GetString("search", "")
 				variables := &opslevel.PayloadVariables{
 					"after": "",
 					"first": 100,
-				}
-				if search != "" {
-					(*variables)["search"] = search
 				}
 
 				resp, err := service.GetDependencies(client, variables)
@@ -817,14 +813,13 @@ For complete reference:
 					return mcp.NewToolResultErrorFromErr("failed to get dependencies", err), nil
 				}
 
-				var dependencies []serializedDependency
+				dependencies := []serializedDependency{}
 				for _, edge := range resp.Edges {
 					dep := serializedDependency{
-						Id:        string(edge.Id),
-						ServiceId: string(edge.Node.Id),
-						Aliases:   edge.Node.Aliases,
-						Locked:    edge.Locked,
-						Notes:     edge.Notes,
+						Id:          string(edge.Id),
+						ComponentId: string(edge.Node.Id),
+						Aliases:     edge.Node.Aliases,
+						Notes:       edge.Notes,
 					}
 					dependencies = append(dependencies, dep)
 				}
@@ -838,7 +833,6 @@ For complete reference:
 				"componentDependents",
 				mcp.WithDescription("Get all the services that depend on a specific component. Returns the reverse dependency graph showing which services consume or call this component."),
 				mcp.WithString("serviceId", mcp.Required(), mcp.Description("The id of the service to fetch dependents for.")),
-				mcp.WithString("search", mcp.Description("Optional search term to filter dependents by name.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Component Dependents in OpsLevel",
 					ReadOnlyHint:    &trueValue,
@@ -853,19 +847,17 @@ For complete reference:
 					return mcp.NewToolResultError("serviceId parameter is required"), nil
 				}
 
-				service := opslevel.Service{
-					ServiceId: opslevel.ServiceId{
-						Id: opslevel.ID(serviceId),
-					},
+				service, err := client.GetService(serviceId)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to get service", err), nil
+				}
+				if service.Id == "" {
+					return mcp.NewToolResultError(fmt.Sprintf("service with id %s not found", serviceId)), nil
 				}
 
-				search := req.GetString("search", "")
 				variables := &opslevel.PayloadVariables{
 					"after": "",
 					"first": 100,
-				}
-				if search != "" {
-					(*variables)["search"] = search
 				}
 
 				resp, err := service.GetDependents(client, variables)
@@ -873,14 +865,13 @@ For complete reference:
 					return mcp.NewToolResultErrorFromErr("failed to get dependents", err), nil
 				}
 
-				var dependents []serializedDependency
+				dependents := []serializedDependency{}
 				for _, edge := range resp.Edges {
 					dep := serializedDependency{
-						Id:        string(edge.Id),
-						ServiceId: string(edge.Node.Id),
-						Aliases:   edge.Node.Aliases,
-						Locked:    edge.Locked,
-						Notes:     edge.Notes,
+						Id:          string(edge.Id),
+						ComponentId: string(edge.Node.Id),
+						Aliases:     edge.Node.Aliases,
+						Notes:       edge.Notes,
 					}
 					dependents = append(dependents, dep)
 				}
