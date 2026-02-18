@@ -36,6 +36,7 @@ dockers:
     - "--label=org.opencontainers.image.version={{ .Tag }}"
     - "--build-arg=VERSION={{ .Tag }}"
     - "--platform=linux/amd64"
+    - "--provenance=false"
     goos: linux
     goarch: amd64
   -
@@ -49,6 +50,7 @@ dockers:
     - "--label=org.opencontainers.image.version={{ .Tag }}"
     - "--build-arg=VERSION={{ .Tag }}"
     - "--platform=linux/arm64"
+    - "--provenance=false"
     goos: linux
     goarch: arm64
 docker_manifests:
