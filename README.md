@@ -203,3 +203,8 @@ If you didn't install the binary directly and instead pulled the docker image yo
           "public.ecr.aws/opslevel/mcp:latest"
         ],
 ```
+
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/opslevel-opslevel-mcp).
+
