@@ -168,9 +168,12 @@ var rootCmd = &cobra.Command{
 	Long:  `Opslevel MCP Server`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
+		httpAddr := viper.GetString("http-addr")
+		isHTTPMode := httpAddr != ""
+
 		token := viper.GetString("api-token")
-		// Allow server to start even if token is missing
-		if token == "" {
+		// In HTTP mode tokens arrive per-request via OAuth Bearer; no startup token needed.
+		if !isHTTPMode && token == "" {
 			log.Warn().Msg("No API token was found. Tool requests will fail with 401 Unauthorized. Set an API token using --api-token=XXX or the OPSLEVEL_API_TOKEN environment variable.")
 		}
 
@@ -200,6 +203,7 @@ var rootCmd = &cobra.Command{
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				searchTerm := req.GetString("searchTerm", "")
 				resp, err := client.SearchTeams(searchTerm, nil)
 
@@ -220,6 +224,7 @@ var rootCmd = &cobra.Command{
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				resp, err := client.ListUsers(nil)
 				return newToolResult(resp.Nodes, err)
 			})
@@ -239,6 +244,7 @@ var rootCmd = &cobra.Command{
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				resp, err := client.ListTriggerDefinitions(nil)
 				return newToolResult(resp.Nodes, err)
 			})
@@ -258,6 +264,7 @@ var rootCmd = &cobra.Command{
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				resp, err := client.ListFilters(nil)
 				return newToolResult(resp.Nodes, err)
 			})
@@ -300,6 +307,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				var resp *opslevel.ServiceConnection
 				var err error
 				var filterInput *componentFilter
@@ -363,6 +371,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				resp, err := client.ListInfrastructure(nil)
 				if err != nil {
 					return mcp.NewToolResultErrorFromErr("failed to list infrastructure", err), nil
@@ -395,6 +404,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				resp, err := client.ListDomains(nil)
 				return newToolResult(resp.Nodes, err)
 			})
@@ -413,6 +423,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				resp, err := client.ListSystems(nil)
 				return newToolResult(resp.Nodes, err)
 			})
@@ -437,6 +448,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				// Get requested types from the arguments
 				args := req.GetArguments()
 				var requestedTypes []any
@@ -515,6 +527,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				resourceTypeString, err := req.RequireString("resourceType")
 				if err != nil {
 					return mcp.NewToolResultError("resourceType parameter is required"), nil
@@ -551,6 +564,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				searchTerm := req.GetString("searchTerm", "")
 				variables := getListDocumentPayloadVariables(searchTerm)
 				resp, err := client.ListDocuments(&variables)
@@ -571,6 +585,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				id, err := req.RequireString("id")
 				if err != nil {
 					return mcp.NewToolResultError("id parameter is required"), nil
@@ -594,6 +609,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				serviceId, err := req.RequireString("serviceId")
 				if err != nil {
 					return mcp.NewToolResultError("serviceId parameter is required"), nil
@@ -623,6 +639,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				resp, err := client.ListChecks(nil)
 				if err != nil {
 					return mcp.NewToolResultErrorFromErr("failed to list checks", err), nil
@@ -658,6 +675,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				serviceId, err := req.RequireString("serviceId")
 				if err != nil {
 					return mcp.NewToolResultError("serviceId parameter is required"), nil
@@ -725,6 +743,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				args := &opslevel.ListCampaignsVariables{}
 				status := req.GetString("status", "")
 				if status != "" {
@@ -790,6 +809,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				componentId, err := req.RequireString("componentId")
 				if err != nil {
 					return mcp.NewToolResultError("componentId parameter is required"), nil
@@ -842,6 +862,7 @@ For complete reference:
 				}),
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				client := clientFromCtx(ctx, client)
 				componentId, err := req.RequireString("componentId")
 				if err != nil {
 					return mcp.NewToolResultError("componentId parameter is required"), nil
@@ -879,6 +900,10 @@ For complete reference:
 				return newToolResult(dependents, nil)
 			})
 
+		if isHTTPMode {
+			return startHTTPServer(s, version, httpAddr)
+		}
+
 		log.Info().Msg("Starting MCP server...")
 		if err := server.ServeStdio(s); err != nil {
 			if err == context.Canceled {
@@ -904,6 +929,7 @@ func init() {
 	rootCmd.PersistentFlags().String("api-url", "https://app.opslevel.com", "The OpsLevel API Url. Overrides environment variable 'OPSLEVEL_API_URL'")
 	rootCmd.PersistentFlags().String("api-token", "", "The OpsLevel API Token. Overrides environment variable 'OPSLEVEL_API_TOKEN'")
 	rootCmd.PersistentFlags().Int("api-timeout", 10, "The number of seconds to timeout of the request. Overrides environment variable 'OPSLEVEL_API_TIMEOUT'")
+	rootCmd.PersistentFlags().String("http-addr", "", "Listen address for Streamable HTTP transport (e.g. ':8080'). When set, the server starts an HTTP server instead of reading from stdio. Overrides environment variable 'OPSLEVEL_HTTP_ADDR'")
 
 	viper.BindPFlags(rootCmd.PersistentFlags())
 	viper.BindEnv("log-format", "OPSLEVEL_LOG_FORMAT", "OL_LOG_FORMAT", "OL_LOGFORMAT")
@@ -911,6 +937,7 @@ func init() {
 	viper.BindEnv("api-url", "OPSLEVEL_API_URL", "OL_API_URL", "OPSLEVEL_APP_URL", "OL_APP_URL")
 	viper.BindEnv("api-token", "OPSLEVEL_API_TOKEN", "OL_API_TOKEN", "OL_APITOKEN")
 	viper.BindEnv("api-timeout", "OPSLEVEL_API_TIMEOUT")
+	viper.BindEnv("http-addr", "OPSLEVEL_HTTP_ADDR")
 	cobra.OnInitialize(initConfig)
 }
 

@@ -203,3 +203,72 @@ If you didn't install the binary directly and instead pulled the docker image yo
           "public.ecr.aws/opslevel/mcp:latest"
         ],
 ```
+
+---
+
+# HTTP Transport & OAuth (hosted MCP)
+
+In addition to the local stdio mode described above, the server supports **Streamable HTTP transport** for hosted deployments (e.g. `mcp.opslevel.com`). In this mode users authenticate with their existing OpsLevel account via OAuth instead of managing a personal API token.
+
+## How it works
+
+```
+MCP Client
+  │
+  ├─ GET /.well-known/oauth-authorization-server
+  │    ← { issuer, authorization_endpoint, token_endpoint, ... }
+  │
+  ├─ Browser: app.opslevel.com/oauth/authorize  (user approves)
+  │    ← authorization code
+  │
+  ├─ POST app.opslevel.com/oauth/token
+  │    ← access_token
+  │
+  └─ POST /mcp   Authorization: Bearer <access_token>
+       │
+       └─ POST app.opslevel.com/graphql   Authorization: Bearer <access_token>
+            ← data  (or 401 if token is invalid/revoked)
+```
+
+1. The MCP client discovers the OAuth server by fetching `/.well-known/oauth-authorization-server` from the MCP host. The response points at OpsLevel's Doorkeeper instance.
+2. The client opens a browser to `app.opslevel.com/oauth/authorize`. The user is already logged in and clicks Approve.
+3. Doorkeeper issues an access token back to the client.
+4. Every subsequent MCP request includes `Authorization: Bearer <token>`. The MCP server requires this header — requests without it receive `401 Unauthorized`.
+5. The Bearer token is forwarded as-is on every GraphQL call to `app.opslevel.com/graphql`. The GraphQL controller validates it. If the token has been revoked or expired, GraphQL returns 401 and the error is passed back to the MCP client.
+
+Token validation is **implicit via GraphQL** — the MCP server itself holds no secrets and does no separate introspection call.
+
+## Starting the server in HTTP mode
+
+Set `--http-addr` (or the environment variable `OPSLEVEL_HTTP_ADDR`) to a listen address:
+
+```bash
+# binary
+opslevel-mcp --http-addr :8080
+
+# environment variable
+OPSLEVEL_HTTP_ADDR=:8080 opslevel-mcp
+
+# docker
+docker run -p 8080:8080 -e OPSLEVEL_HTTP_ADDR=:8080 public.ecr.aws/opslevel/mcp:latest
+```
+
+When `--http-addr` is set the server ignores stdio and does **not** require `OPSLEVEL_API_TOKEN` at startup — tokens are supplied per-request by authenticated clients.
+
+## Endpoints
+
+| Path | Auth required | Description |
+|------|--------------|-------------|
+| `POST /mcp` | Yes — Bearer token | MCP Streamable HTTP endpoint |
+| `GET /mcp` | Yes — Bearer token | MCP server-sent event stream |
+| `GET /.well-known/oauth-authorization-server` | No | OAuth server discovery metadata |
+
+## Connecting an MCP client to the hosted server
+
+For clients that support OAuth-authenticated remote MCP servers (e.g. Claude.ai, Cursor), add the server URL directly — no token configuration needed:
+
+```
+https://mcp.opslevel.com
+```
+
+The client fetches `/.well-known/oauth-authorization-server`, opens the OpsLevel authorization page, and handles the token exchange automatically.
