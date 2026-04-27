@@ -8,7 +8,4 @@ src/*.yaml
 .vscode/
 src/cli
 src/opslevel-mcp
-mcp-eval/node_modules/
 .env
-mcp-eval/results/*
-!mcp-eval/results/.keep
