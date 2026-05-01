@@ -525,6 +525,9 @@ For complete reference:
 				}
 				resourceType := opslevel.AliasOwnerTypeEnum(resourceTypeString)
 				resp, err := client.GetAliasableResource(resourceType, identifier)
+				if err != nil {
+					return newToolResult(nil, err)
+				}
 				switch v := resp.(type) {
 				case *opslevel.Service:
 					lastDeploy, err1 := v.GetLastDeploy(client, nil)
