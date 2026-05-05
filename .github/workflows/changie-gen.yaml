@@ -35,14 +35,24 @@ jobs:
           echo "No changelog exists for this PR, creating a new one"
         fi
 
+    - name: Set up Go
+      if: github.event.workflow_run.conclusion == 'success' && steps.changelog_check.outputs.exists == 'false'
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+      with:
+        go-version-file: src/go.mod
+        cache-dependency-path: |
+          src/go.sum
+
     - name: Create changie log
       if: >-
         github.event.workflow_run.conclusion == 'success' &&
         steps.changelog_check.outputs.exists == 'false'
-      uses: miniscruff/changie-action@6dcc2533cac0495148ed4046c438487e4dceaa23 # v2
-      with:
-        version: latest
-        args: new --kind Dependency --body "${{ github.event.workflow_run.display_title }}"
+      shell: bash
+      env:
+        CHANGIE_BODY: ${{ github.event.workflow_run.display_title }}
+      run: |
+        CHANGIE=$(cd src && go tool -n changie)
+        "$CHANGIE" new --kind Dependency --body "$CHANGIE_BODY"
 
     - name: Commit & Push changes
       if: github.event.workflow_run.conclusion == 'success' && steps.changelog_check.outputs.exists == 'false'
