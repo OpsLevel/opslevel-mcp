@@ -39,7 +39,7 @@ jobs:
       if: >-
         github.event.workflow_run.conclusion == 'success' &&
         steps.changelog_check.outputs.exists == 'false'
-      uses: miniscruff/changie-action@6dcc2533cac0495148ed4046c438487e4dceaa23 # v2
+      uses: miniscruff/changie-action@11bcad388e7973948cbcecb10863baf024d5f607 # v3.0.0
       with:
         version: latest
         args: new --kind Dependency --body "${{ github.event.workflow_run.display_title }}"
