@@ -11,7 +11,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/opslevel/opslevel-go/v2025"
+	"github.com/opslevel/opslevel-go/v2026"
 
 	"github.com/spf13/cobra"
 
@@ -114,6 +114,23 @@ type serializedDependency struct {
 	Notes       string
 }
 
+type serializedTeamRef struct {
+	Id    string
+	Alias string
+}
+
+type serializedUser struct {
+	Id            string
+	Email         string
+	Name          string
+	Role          string
+	HtmlUrl       string
+	ProvisionedBy string
+	Contacts      []opslevel.Contact
+	Tags          []string
+	Teams         []serializedTeamRef
+}
+
 // AccountMetadata represents the different types of account metadata that can be fetched
 type AccountMetadata string
 
@@ -204,13 +221,14 @@ var rootCmd = &cobra.Command{
 				resp, err := client.SearchTeams(searchTerm, nil)
 
 				return newToolResult(resp.Nodes, err)
-			})
+			},
+		)
 
 		// Register Users
 		s.AddTool(
 			mcp.NewTool(
 				"users",
-				mcp.WithDescription("Get all the user names, e-mail addresses and metadata for the OpsLevel account.  Users are the people in OpsLevel. Only use this if you need to search all users."),
+				mcp.WithDescription("Get all the user names, e-mail addresses, contacts, tags, and team memberships for the OpsLevel account. Users are the people in OpsLevel. Only use this if you need to search all users."),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
 					Title:           "Users in OpsLevel",
 					ReadOnlyHint:    &trueValue,
@@ -221,8 +239,38 @@ var rootCmd = &cobra.Command{
 			),
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListUsers(nil)
-				return newToolResult(resp.Nodes, err)
-			})
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to list users", err), nil
+				}
+				users := make([]serializedUser, 0, len(resp.Nodes))
+				for _, node := range resp.Nodes {
+					u := serializedUser{
+						Id:            string(node.Id),
+						Email:         node.Email,
+						Name:          node.Name,
+						Role:          string(node.Role),
+						HtmlUrl:       node.HtmlUrl,
+						ProvisionedBy: string(node.ProvisionedBy),
+						Contacts:      node.Contacts,
+					}
+					if node.Tags != nil {
+						for _, tag := range node.Tags.Nodes {
+							u.Tags = append(u.Tags, fmt.Sprintf("%s:%s", tag.Key, tag.Value))
+						}
+					}
+					if node.TeamsConnection != nil {
+						for _, team := range node.TeamsConnection.Nodes {
+							u.Teams = append(u.Teams, serializedTeamRef{
+								Id:    string(team.Id),
+								Alias: team.Alias,
+							})
+						}
+					}
+					users = append(users, u)
+				}
+				return newToolResult(users, nil)
+			},
+		)
 
 		// Register Actions
 		s.AddTool(
@@ -241,7 +289,8 @@ var rootCmd = &cobra.Command{
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListTriggerDefinitions(nil)
 				return newToolResult(resp.Nodes, err)
-			})
+			},
+		)
 
 		// Register Filters
 		s.AddTool(
@@ -260,7 +309,8 @@ var rootCmd = &cobra.Command{
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListFilters(nil)
 				return newToolResult(resp.Nodes, err)
-			})
+			},
+		)
 
 		// Register Components
 		s.AddTool(
@@ -347,7 +397,8 @@ For complete reference:
 					})
 				}
 				return newToolResult(components, nil)
-			})
+			},
+		)
 
 		// Register Infra
 		s.AddTool(
@@ -379,7 +430,8 @@ For complete reference:
 					})
 				}
 				return newToolResult(infrastructureResources, nil)
-			})
+			},
+		)
 
 		// Register Domains
 		s.AddTool(
@@ -397,7 +449,8 @@ For complete reference:
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListDomains(nil)
 				return newToolResult(resp.Nodes, err)
-			})
+			},
+		)
 
 		// Register Systems
 		s.AddTool(
@@ -415,7 +468,8 @@ For complete reference:
 			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				resp, err := client.ListSystems(nil)
 				return newToolResult(resp.Nodes, err)
-			})
+			},
+		)
 
 		// Account metadata is lightweight data often only needed to provide context for other tool calls.
 		// We wrap it up in one tool to reduce bloat, but accept a `types` arg to allow the MCP to request what it needs specifically.
@@ -497,7 +551,8 @@ For complete reference:
 
 				// Return any metadata we could fetch, along with any error
 				return newToolResult(metadata, fetchErr)
-			})
+			},
+		)
 
 		// Register ability to fetch a single resource by ID or alias
 		s.AddTool(
@@ -535,11 +590,13 @@ For complete reference:
 				default:
 					return newToolResult(resp, err)
 				}
-			})
+			},
+		)
 
 		// Register all documents, filtered by search term
 		s.AddTool(
-			mcp.NewTool("documents",
+			mcp.NewTool(
+				"documents",
 				mcp.WithDescription("Get all the documents for the OpsLevel account. Documents are filterable by search term. Documents could be things like runbooks, integration documentation, api documentation, readme's, or other forms of documentation."),
 				mcp.WithString("searchTerm", mcp.Description("To filter documents with.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
@@ -555,11 +612,13 @@ For complete reference:
 				variables := getListDocumentPayloadVariables(searchTerm)
 				resp, err := client.ListDocuments(&variables)
 				return newToolResult(resp.Nodes, err)
-			})
+			},
+		)
 
 		// Register document by id
 		s.AddTool(
-			mcp.NewTool("document",
+			mcp.NewTool(
+				"document",
 				mcp.WithDescription("Get the contents of a technical or api document in the OpsLevel account, specified by document 'id' or the 'preferredApiDocument' (on a component). Documents could be things like runbooks, integration documentation, api documentation, readme's, or other forms of documentation."),
 				mcp.WithString("id", mcp.Required(), mcp.Description("The id of the document to fetch.")),
 				mcp.WithToolAnnotation(mcp.ToolAnnotation{
@@ -577,11 +636,13 @@ For complete reference:
 				}
 				resp, err := client.GetDocument(opslevel.ID(id))
 				return newToolResult(resp, err)
-			})
+			},
+		)
 
 		// Register all documents, filtered by service id and search term
 		s.AddTool(
-			mcp.NewTool("documentsOnService",
+			mcp.NewTool(
+				"documentsOnService",
 				mcp.WithDescription("Get all documents on a specified service for the OpsLevel account, specified by service id and filtered by search term. Documents could be things like runbooks, integration documentation, api documentation, readme's, or other forms of documentation."),
 				mcp.WithString("serviceId", mcp.Required(), mcp.Description("The id of the service which the documents are on.")),
 				mcp.WithString("searchTerm", mcp.Description("To filter documents with.")),
@@ -607,7 +668,8 @@ For complete reference:
 				variables := getListDocumentPayloadVariables(searchTerm)
 				resp, err := service.GetDocuments(client, &variables)
 				return newToolResult(resp, err)
-			})
+			},
+		)
 
 		// Register checks
 		s.AddTool(
@@ -642,7 +704,8 @@ For complete reference:
 					})
 				}
 				return newToolResult(checks, nil)
-			})
+			},
+		)
 
 		s.AddTool(
 			mcp.NewTool(
@@ -708,7 +771,8 @@ For complete reference:
 				}
 
 				return newToolResult(result, nil)
-			})
+			},
+		)
 
 		// Register campaigns tool
 		s.AddTool(
@@ -773,7 +837,8 @@ For complete reference:
 				}
 
 				return newToolResult(campaigns, err)
-			})
+			},
+		)
 
 		// Register component dependencies tool
 		s.AddTool(
@@ -825,7 +890,8 @@ For complete reference:
 				}
 
 				return newToolResult(dependencies, nil)
-			})
+			},
+		)
 
 		// Register component dependents tool
 		s.AddTool(
@@ -877,7 +943,8 @@ For complete reference:
 				}
 
 				return newToolResult(dependents, nil)
-			})
+			},
+		)
 
 		log.Info().Msg("Starting MCP server...")
 		if err := server.ServeStdio(s); err != nil {
@@ -951,14 +1018,16 @@ func getListDocumentPayloadVariables(searchTerm string) opslevel.PayloadVariable
 	}
 }
 
+func ptr[T any](v T) *T { return &v }
+
 // convertToServiceFilterInput converts a componentFilter to a ServiceFilterInput for the OpsLevel API
 func convertToServiceFilterInput(filter componentFilter) (opslevel.ServiceFilterInput, error) {
 	// Handle simple filter
 	if filter.Key != "" && filter.Type != "" {
 		return opslevel.ServiceFilterInput{
-			Key:  opslevel.PredicateKeyEnum(filter.Key),
+			Key:  ptr(opslevel.ServiceFilterEnum(filter.Key)),
 			Arg:  filter.Arg,
-			Type: opslevel.PredicateTypeEnum(filter.Type),
+			Type: ptr(opslevel.TypeEnum(filter.Type)),
 		}, nil
 	}
 
@@ -972,10 +1041,9 @@ func convertToServiceFilterInput(filter componentFilter) (opslevel.ServiceFilter
 			}
 			predInputs = append(predInputs, predInput)
 		}
-		connective := opslevel.ConnectiveEnum(filter.Connective)
 		return opslevel.ServiceFilterInput{
-			Connective: &connective,
-			Predicates: &predInputs,
+			Connective: ptr(opslevel.ConnectiveEnum(filter.Connective)),
+			Predicates: predInputs,
 		}, nil
 	}
 
