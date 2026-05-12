@@ -131,6 +131,19 @@ type serializedUser struct {
 	Teams         []serializedTeamRef
 }
 
+type serializedOnCallUser struct {
+	Id    string
+	Name  string
+	Email string
+}
+
+type serializedOnCall struct {
+	Id    string
+	Name  string
+	Email string
+	User  *serializedOnCallUser
+}
+
 // AccountMetadata represents the different types of account metadata that can be fetched
 type AccountMetadata string
 
@@ -269,6 +282,60 @@ var rootCmd = &cobra.Command{
 					users = append(users, u)
 				}
 				return newToolResult(users, nil)
+			},
+		)
+
+		// Register Service On-Call
+		s.AddTool(
+			mcp.NewTool(
+				"serviceOnCall",
+				mcp.WithDescription("Returns the person currently on-call for a given service. Use this for incident-response routing."),
+				mcp.WithString("identifier", mcp.Required(), mcp.Description("The service id or alias to fetch on-call responders for.")),
+				mcp.WithToolAnnotation(mcp.ToolAnnotation{
+					Title:           "On-Call for Service",
+					ReadOnlyHint:    &trueValue,
+					DestructiveHint: &falseValue,
+					IdempotentHint:  &trueValue,
+					OpenWorldHint:   &trueValue,
+				}),
+			),
+			func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+				identifier, err := req.RequireString("identifier")
+				if err != nil {
+					return mcp.NewToolResultError("identifier parameter is required"), nil
+				}
+
+				service, err := client.GetService(identifier)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to get service", err), nil
+				}
+				if service == nil || service.Id == "" {
+					return mcp.NewToolResultError(fmt.Sprintf("service with identifier %s not found", identifier)), nil
+				}
+
+				resp, err := service.GetOnCalls(client, nil)
+				if err != nil {
+					return mcp.NewToolResultErrorFromErr("failed to get service on-call", err), nil
+				}
+
+				onCalls := make([]serializedOnCall, 0, len(resp.Nodes))
+				for _, node := range resp.Nodes {
+					onCall := serializedOnCall{
+						Id:    string(node.Id),
+						Name:  node.Name,
+						Email: node.ExternalEmail,
+					}
+					if node.User != nil {
+						onCall.User = &serializedOnCallUser{
+							Id:    string(node.User.Id),
+							Email: node.User.Email,
+							Name:  node.User.Name,
+						}
+					}
+					onCalls = append(onCalls, onCall)
+				}
+
+				return newToolResult(onCalls, nil)
 			},
 		)
 
