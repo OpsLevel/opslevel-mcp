@@ -63,6 +63,7 @@ jobs:
           then
             echo "Skip Changie..."
           else
+            (cd src && go tool changie --version)
             CHANGIE=$(cd src && go tool -n changie)
             $CHANGIE batch ${{ steps.version.outputs.RELEASE_VERSION }}
             $CHANGIE merge
