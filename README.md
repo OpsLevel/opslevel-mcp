@@ -26,6 +26,29 @@
 
 # OpsLevel MCP Server
 
+> [!WARNING]
+> **This self-hosted MCP server is deprecated.** New users should prefer the hosted MCP server at **https://app.opslevel.com/mcp**, which requires no local install or binary management and stays automatically up to date.
+>
+> ### Using the hosted MCP server
+>
+> The hosted server uses OAuth — no API token, binary, or client secret to manage. For any AI tool that supports remote MCP servers, the only value you need to configure is the URL:
+>
+> ```json
+> {
+>     "mcpServers": {
+>         "opslevel": {
+>             "url": "https://app.opslevel.com/mcp"
+>         }
+>     }
+> }
+> ```
+>
+> Your client discovers the OAuth configuration automatically and opens a browser for you to log in to OpsLevel and grant access. Notes:
+>
+> - Authentication is OAuth 2.1 (Dynamic Client Registration + authorization code with PKCE) — your MCP client handles this for you, including refreshing the short-lived access tokens.
+> - The transport is streamable HTTP (not SSE). If your client asks, choose the HTTP / streamable-HTTP option.
+> - Consult your AI tool's documentation for exactly where to add a remote MCP server.
+
 This MCP ([Model Context Protocol](https://modelcontextprotocol.io/introduction)) server provides AIs with tools to interact with your OpsLevel account.
 
 ![mcp_image](https://github.com/user-attachments/assets/dd936eef-80c2-42a5-8d04-9ca9c2de8e76)
